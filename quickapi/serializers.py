@@ -2,8 +2,7 @@ import dataclasses
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Protocol, TypeAlias, TypeVar
 
-import attrs
-import cattrs
+import chili
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -12,6 +11,14 @@ from .exceptions import (
     DictDeserializationError,
     DictSerializationError,
 )
+
+try:
+    import attrs
+    import cattrs
+except ImportError:
+    attrs_installed = False
+else:
+    attrs_installed = True
 
 try:
     import pydantic
@@ -64,9 +71,8 @@ class DataclassSerializer:
         cls, klass: type[FromDictSerializableT], values: dict
     ) -> FromDictSerializableT:
         try:
-            # TODO: See if there's a simpler approach so we can remove this hard dependency
-            return cattrs.structure(values, klass)
-        except cattrs.ClassValidationError as e:
+            return chili.decode(values, klass)
+        except ValueError as e:
             raise DictSerializationError(expected_type=klass.__name__) from e
 
 
@@ -92,7 +98,7 @@ class AttrsSerializer:
 
     @classmethod
     def can_apply(cls, klass: type[FromDictSerializableT]) -> bool:
-        return attrs.has(klass)
+        return attrs_installed and attrs.has(klass)
 
     @classmethod
     def from_dict(
@@ -111,7 +117,7 @@ class AttrsDeserializer:
 
     @classmethod
     def can_apply(cls, instance: "attrs.AttrsInstance") -> bool:
-        return attrs.has(type(instance))
+        return attrs_installed and attrs.has(type(instance))
 
     @classmethod
     def to_dict(cls, instance: "attrs.AttrsInstance") -> dict | None:
