@@ -46,7 +46,7 @@ class PydanticComplexModel(pydantic.BaseModel):
     data: list[PydanticFact] = pydantic.Field(default_factory=list)
 
 
-class TestSimpleSerializers:
+class TestSerializers:
     simple_model: ClassVar = {"fact": "fact", "length": 4}
     complex_model: ClassVar = {"current_page": 1, "data": [simple_model]}
     invalid_model: ClassVar = {"current_page": "not_int", "data": []}
