@@ -99,8 +99,8 @@ import quickapi
 
 
 @quickapi.define
-class MyApi:
-    url = "https://catfact.ninja/facts"
+class SubmitApi:
+    url = "/submit"
     method = quickapi.BaseApiMethod.POST
 
     class RequestBody:
@@ -112,7 +112,31 @@ class MyApi:
         data: list[Fact]
 ```
 
-And also to be able to support multiple endpoints per API client.
+And if you had multiple related endpoints that could share HTTP session or auth:
+
+```python
+import quickapi
+
+
+@quickapi.define
+class FetchApi:
+    url = "/fetch"
+    method = quickapi.BaseApiMethod.GET
+
+    class ResponseBody:
+        current_page: int
+        data: list[Fact]
+
+@quickapi.define_client
+class MyClient:
+    base_url = "https://catfact.ninja"
+    fetch = FetchApi
+    submit = SubmitApi
+
+client = MyClient(auth=...)
+response = client.fetch()
+response = client.submit(RequestBody(...))
+```
 
 ## Installation
 
