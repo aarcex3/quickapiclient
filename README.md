@@ -90,54 +90,6 @@ It's still early development but so far we have support for:
   - [ ] XML
   - [ ] Others?
 
-## Goal
-
-Eventually, I would like for the API definition to end up looking more like this (though the current approach will still be supported):
-
-```python
-import quickapi
-
-
-@quickapi.define
-class SubmitApi:
-    url = "/submit"
-    method = quickapi.BaseApiMethod.POST
-
-    class RequestBody:
-        required_input: str
-        optional_input: str | None = None
-
-    class ResponseBody:
-        current_page: int
-        data: list[Fact]
-```
-
-And if you had multiple related endpoints that could share HTTP session or auth:
-
-```python
-import quickapi
-
-
-@quickapi.define
-class FetchApi:
-    url = "/fetch"
-    method = quickapi.BaseApiMethod.GET
-
-    class ResponseBody:
-        current_page: int
-        data: list[Fact]
-
-@quickapi.define_client
-class MyClient:
-    base_url = "https://catfact.ninja"
-    fetch = FetchApi
-    submit = SubmitApi
-
-client = MyClient(auth=...)
-response = client.fetch()
-response = client.submit(RequestBody(...))
-```
-
 ## Installation
 
 You can easily install this using `pip`:
@@ -471,6 +423,56 @@ http_client = httpx.Client()
 response = client.fetch(auth=auth, http_client=http_client).execute()
 # Calling the SubmitApi endpoint
 response = client.submit(auth=auth, http_client=http_client).execute()
+```
+
+</details>
+
+## Goal
+
+Eventually, I would like for the API definition to end up looking more like this (though the current approach will still be supported):
+
+<details>
+<summary>Click to expand</summary>
+
+```python
+import quickapi
+
+
+@quickapi.define
+class SubmitApi:
+    url = "/submit"
+    method = quickapi.BaseApiMethod.POST
+
+    class RequestBody:
+        required_input: str
+        optional_input: str | None = None
+
+    class ResponseBody:
+        current_page: int
+        data: list[Fact]
+```
+
+And if you had multiple related endpoints that could share HTTP session or auth:
+
+```python
+@quickapi.define
+class FetchApi:
+    url = "/fetch"
+    method = quickapi.BaseApiMethod.GET
+
+    class ResponseBody:
+        current_page: int
+        data: list[Fact]
+
+@quickapi.define_client
+class MyClient:
+    base_url = "https://catfact.ninja"
+    fetch = FetchApi
+    submit = SubmitApi
+
+client = MyClient(auth=...)
+response = client.fetch()
+response = client.submit(RequestBody(...))
 ```
 
 </details>
