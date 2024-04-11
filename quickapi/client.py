@@ -10,7 +10,7 @@ from .exceptions import (
     RequestSerializationError,
     ResponseSerializationError,
 )
-from .http_client import (
+from .http_clients import (
     BaseHttpClient,
     BaseHttpClientAuth,
     BaseHttpClientResponse,

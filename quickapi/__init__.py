@@ -11,7 +11,7 @@ from .exceptions import (  # noqa: F401
     RequestSerializationError,
     ResponseSerializationError,
 )
-from .http_client import BaseHttpClient, HTTPxClient, RequestsClient  # noqa: F401
+from .http_clients import BaseHttpClient, HTTPxClient, RequestsClient  # noqa: F401
 from .serializers import (  # noqa: F401
     DictSerializable,
 )
