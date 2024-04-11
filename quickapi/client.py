@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Generic, TypeVar, get_args
 
-from .exceptions import (
+from quickapi.exceptions import (
     ClientSetupError,
     DictDeserializationError,
     DictSerializationError,
@@ -10,13 +10,13 @@ from .exceptions import (
     RequestSerializationError,
     ResponseSerializationError,
 )
-from .http_clients import (
+from quickapi.http_clients import (
     BaseHttpClient,
     BaseHttpClientAuth,
     BaseHttpClientResponse,
     HTTPxClient,
 )
-from .serializers import (
+from quickapi.serializers import (
     DictSerializable,
     DictSerializableT,
 )

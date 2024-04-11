@@ -1,4 +1,7 @@
-from .base import BaseHttpClient  # noqa: F401
-from .httpx import HTTPxClient  # noqa: F401
-from .requests import RequestsClient  # noqa: F401
-from .types import BaseHttpClientAuth, BaseHttpClientResponse  # noqa: F401
+from quickapi.http_clients.base import BaseHttpClient  # noqa: F401
+from quickapi.http_clients.httpx import HTTPxClient  # noqa: F401
+from quickapi.http_clients.requests import RequestsClient  # noqa: F401
+from quickapi.http_clients.types import (  # noqa: F401
+    BaseHttpClientAuth,
+    BaseHttpClientResponse,
+)

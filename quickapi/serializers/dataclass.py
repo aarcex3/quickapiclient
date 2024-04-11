@@ -6,8 +6,8 @@ import chili
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
-from ..exceptions import DictSerializationError
-from .types import FromDictSerializableT
+from quickapi.exceptions import DictSerializationError
+from quickapi.serializers.types import FromDictSerializableT
 
 
 class DataclassSerializer:

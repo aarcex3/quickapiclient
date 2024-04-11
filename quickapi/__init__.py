@@ -1,8 +1,8 @@
-from .client import (  # noqa: F401
+from quickapi.client import (  # noqa: F401
     BaseApi,
     BaseApiMethod,
 )
-from .exceptions import (  # noqa: F401
+from quickapi.exceptions import (  # noqa: F401
     ClientSetupError,
     DictDeserializationError,
     DictSerializationError,
@@ -11,7 +11,11 @@ from .exceptions import (  # noqa: F401
     RequestSerializationError,
     ResponseSerializationError,
 )
-from .http_clients import BaseHttpClient, HTTPxClient, RequestsClient  # noqa: F401
-from .serializers import (  # noqa: F401
+from quickapi.http_clients import (  # noqa: F401
+    BaseHttpClient,
+    HTTPxClient,
+    RequestsClient,
+)
+from quickapi.serializers import (  # noqa: F401
     DictSerializable,
 )

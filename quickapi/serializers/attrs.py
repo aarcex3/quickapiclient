@@ -1,5 +1,5 @@
-from ..exceptions import DictSerializationError
-from .types import FromDictSerializableT
+from quickapi.exceptions import DictSerializationError
+from quickapi.serializers.types import FromDictSerializableT
 
 try:
     import attrs

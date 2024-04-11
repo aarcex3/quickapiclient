@@ -1,15 +1,14 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from quickapi.serializers.types import DictSerializableT, FromDictSerializableT
-
-from ..exceptions import (
+from quickapi.exceptions import (
     DictDeserializationError,
     DictSerializationError,
 )
-from .attrs import AttrsDeserializer, AttrsSerializer
-from .dataclass import DataclassDeserializer, DataclassSerializer
-from .pydantic import PydanticDeserializer, PydanticSerializer
+from quickapi.serializers.attrs import AttrsDeserializer, AttrsSerializer
+from quickapi.serializers.dataclass import DataclassDeserializer, DataclassSerializer
+from quickapi.serializers.pydantic import PydanticDeserializer, PydanticSerializer
+from quickapi.serializers.types import DictSerializableT, FromDictSerializableT
 
 
 class BaseSerializer(Protocol):
