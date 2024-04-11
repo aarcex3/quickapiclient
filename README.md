@@ -64,7 +64,7 @@ It's still early development but so far we have support for:
   - [x] Basic error and serialization handling
   - [ ] Nested/inner class definitions
   - [ ] Improved HTTP status codes error handling
-  - [ ] Sessions support and/or allow building several related APIs through a single interface
+  - [x] Sessions support and/or allow building several related APIs through a single interface
   - [ ] Generate API boilerplate from OpenAPI specs
   - [ ] Full async support
 - HTTP client libraries
@@ -440,6 +440,37 @@ And to use it:
 ```python
 client = MyApi()
 response = client.execute()
+```
+
+</details>
+
+### Multiple API endpoints sharing state
+
+You can easily create a client to manage related endpoints, and even share things like
+auth. This is done through pure Python at this stage, though we aim to make this a lot
+easier and streamlined in the future.
+
+<details>
+<summary>Click to expand</summary>
+
+```python
+... [Assuming GetApi and SubmitApi have been already defined]
+
+class ExampleClient:
+    fetch = GetApi
+    submit = SubmitApi
+```
+
+And to use it:
+
+```python
+client = ExampleClient()
+auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
+http_client = httpx.Client()
+# Calling the GetApi endpoint
+response = client.fetch(auth=auth, http_client=http_client).execute()
+# Calling the SubmitApi endpoint
+response = client.submit(auth=auth, http_client=http_client).execute()
 ```
 
 </details>
