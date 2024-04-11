@@ -1,4 +1,4 @@
-from quickapi.client import (  # noqa: F401
+from quickapi.api import (  # noqa: F401
     BaseApi,
     BaseApiMethod,
 )

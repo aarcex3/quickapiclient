@@ -50,7 +50,7 @@ class BaseApiMethod(str, Enum):
 
 
 class BaseApi(Generic[ResponseBodyT]):
-    """Base class for all API clients."""
+    """Base class for all API endpoints."""
 
     url: str
     method: BaseApiMethod = BaseApiMethod.GET

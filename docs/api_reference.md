@@ -1,9 +1,9 @@
 # API reference
 
-::: quickapi.client
+::: quickapi.api
 
 ::: quickapi.exceptions
 
-::: quickapi.http_client
+::: quickapi.http_clients
 
 ::: quickapi.serializers
