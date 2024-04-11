@@ -37,10 +37,9 @@ class DictSerializable:
     """
     Convert to/from dictionaries to the appropriate class/instance.
 
-    @TODO: Maybe make the (de)serializer pluggable and configurable
-        instead of checking which one can apply.
     """
 
+    # TODO: Maybe make the (de)serializer pluggable and configurable instead
     serializers: Sequence[type[BaseSerializer]] = (
         DataclassSerializer,
         AttrsSerializer,

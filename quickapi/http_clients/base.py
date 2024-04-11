@@ -8,7 +8,10 @@ from quickapi.http_clients.types import (
 
 
 class BaseHttpClient(ABC):
-    """Base interface for all HTTP clients."""
+    """Base interface for all HTTP clients.
+
+    You can create your own HTTP client by subclassing this class.
+    """
 
     @abstractmethod
     def __init__(self, *args, **kwargs): ...  # type: ignore [no-untyped-def]

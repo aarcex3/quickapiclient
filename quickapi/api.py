@@ -33,7 +33,57 @@ class BaseResponse(Generic[ResponseBodyT]):
 
 
 class BaseApi(Generic[ResponseBodyT]):
-    """Base class for all API endpoints."""
+    """
+    Base class for all API endpoints.
+
+    Subclass from `BaseApi` and define appropriate attributes from
+    the list below to create your own API client endpoint.
+
+    Make sure to add in the generic type for the expected response body, so that
+    you can get a fully typed response object.
+
+    Attributes:
+        url: The URL of the API endpoint.
+        method: The HTTP method to be used for the request.
+        auth: Optional authentication to be used.
+        request_params: The request parameters (query strings) type.
+            Will be added to the URL.
+        request_body: The request body type (for POST, PUT, PATCH requests).
+        response_body: The expected response body type. The HTTP response body
+            will be serialized to this type.
+        http_client: Optional HTTP client to be used if not using the
+            default (HTTPx). Or if wanting to customize the default client.
+
+    Raises:
+        ClientSetupError: If the class attributes are not correctly defined.
+
+    Examples:
+        A ver basic example of a Cat Facts API definition:
+
+        ```python
+        import quickapi
+
+
+        @dataclass
+        class ResponseBody:
+            current_page: int
+            data: list[Fact]
+
+
+        class MyApi(quickapi.BaseApi[ResponseBody]):
+            url = "https://catfact.ninja/facts"
+            response_body = ResponseBody
+        ```
+
+        Which can be used like this:
+
+        ```python
+        api = MyApi()
+        response = api.execute()
+        assert isinstance(response.body, ResponseBody)
+        ```
+
+    """
 
     url: str
     method: BaseHttpMethod = BaseHttpMethod.GET
@@ -120,7 +170,28 @@ class BaseApi(Generic[ResponseBodyT]):
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
     ) -> BaseResponse[ResponseBodyT]:
-        """Execute the API request and return the response."""
+        """
+        Validate and execute the API request, then validate and return the typed response.
+
+        You can optionally override the request parameters, request body, HTTP client
+        and authentication. Otherwise, default values from the class attributes (if
+        defined) will be used.
+
+        Args:
+            request_params: Optional request parameters to be sent with the request.
+            request_body: Optional request body to be sent with the request.
+            http_client: Optional HTTP client to be used for sending the request.
+            auth: Optional authentication to be used for the request.
+
+        Returns:
+            Response object containing the client response and the parsed response body.
+
+        Raises:
+            HTTPError: If the response status code is not 200.
+            RequestSerializationError: If the request parameters or body cannot be serialized.
+            ResponseSerializationError: If the response body cannot be serialized.
+
+        """
 
         self._load_overrides(request_params, request_body, http_client, auth)
         request_params = self._parse_request_params(self._request_params)

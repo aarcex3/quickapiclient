@@ -8,16 +8,18 @@ repo_name: martinn/quickapiclient
 
 nav:
   - Home: index.md
-  - API Reference: api_reference.md
+  - API Reference:
+      - BaseApi: api_reference/index.md
+      - Exceptions: api_reference/exceptions.md
+      - HTTP clients: api_reference/http_clients.md
+      - Serializers: api_reference/serializers.md
 
 plugins:
   - search
   - mkdocstrings:
       handlers:
         python:
-          setup_commands:
-            - import sys
-            - sys.path.append('../')
+          paths: [.]
 
 theme:
   name: material

@@ -14,6 +14,7 @@ class RequestsClient(BaseHttpClient):
     A thin wrapper around requests.
 
     This client is only available if the requests library is installed with:
+
     `pip install quickapiclient[requests]`
     or `poetry add quickapiclient[requests]`.
     """
