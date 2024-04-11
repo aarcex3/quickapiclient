@@ -170,6 +170,9 @@ poetry add quickapiclient[requests]
 
 An example of a GET request with query parameters with overridable default values.
 
+<details>
+<summary>Click to expand</summary>
+
 ```python
 from dataclasses import dataclass
 import quickapi
@@ -211,9 +214,14 @@ request_params = RequestParams(max_length=5, limit=10)
 response = client.execute(request_params=request_params)
 ```
 
+</details>
+
 ### A POST request
 
 An example of a POST request with some optional and required data.
+
+<details>
+<summary>Click to expand</summary>
 
 ```python
 from dataclasses import dataclass
@@ -253,9 +261,14 @@ request_body = RequestBody(required_input="dummy")
 response = client.execute(request_body=request_body)
 ```
 
+</details>
+
 ### A POST request with authentication
 
 An example of a POST request with HTTP header API key.
+
+<details>
+<summary>Click to expand</summary>
 
 ```python
 from dataclasses import dataclass
@@ -298,9 +311,14 @@ auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key"
 response = client.execute(request_body=request_body, auth=auth)
 ```
 
+</details>
+
 ### A POST request with validation and conversion (Using `attrs`)
 
 An example of a POST request with custom validators and converters (using `attrs` instead).
+
+<details>
+<summary>Click to expand</summary>
 
 ```python
 import attrs
@@ -345,9 +363,14 @@ response = client.execute(request_body=request_body)
 
 Check out [attrs](https://github.com/python-attrs/attrs) for full configuration.
 
+</details>
+
 ### A POST request with validation and conversion (Using `pydantic`)
 
 An example of a POST request with custom validators and converters (using `pydantic` instead).
+
+<details>
+<summary>Click to expand</summary>
 
 ```python
 import enum
@@ -386,9 +409,14 @@ response = client.execute(request_body=request_body)
 
 Check out [pydantic](https://github.com/pydantic/pydantic) for full configuration.
 
+</details>
+
 ### Using `requests` library
 
 An example of a GET request using the `requests` HTTP library instead of `HTTPx`.
+
+<details>
+<summary>Click to expand</summary>
 
 ```python
 from dataclasses import dataclass
@@ -413,6 +441,8 @@ And to use it:
 client = MyApi()
 response = client.execute()
 ```
+
+</details>
 
 ## Contributing
 
