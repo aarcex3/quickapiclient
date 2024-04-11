@@ -200,7 +200,7 @@ class ResponseBody:
 
 class MyApi(quickapi.BaseApi[ResponseBody]):
     url = "https://catfact.ninja/facts"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
     response_body = ResponseBody
 ```
@@ -248,7 +248,7 @@ class AuthResponseBody:
 
 class MyApi(quickapi.BaseApi[AuthResponseBody]):
     url = "https://httpbin.org/bearer"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     # You could specify it here if you wanted
     # auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
     response_body = AuthResponseBody
@@ -300,7 +300,7 @@ class ResponseBody:
 
 class MyApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
     response_body = ResponseBody
 ```
@@ -346,7 +346,7 @@ class ResponseBody(pydantic.BaseModel):
 
 class MyApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
     response_body = ResponseBody
 ```
@@ -441,7 +441,7 @@ import quickapi
 @quickapi.define
 class SubmitApi:
     url = "/submit"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
 
     class RequestBody:
         required_input: str
@@ -458,7 +458,7 @@ And if you had multiple related endpoints that could share HTTP session or auth:
 @quickapi.define
 class FetchApi:
     url = "/fetch"
-    method = quickapi.BaseApiMethod.GET
+    method = quickapi.BaseHttpMethod.GET
 
     class ResponseBody:
         current_page: int

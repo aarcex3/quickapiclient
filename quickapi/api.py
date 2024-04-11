@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum
 from typing import Generic, TypeVar, get_args
 
 from quickapi.exceptions import (
@@ -16,6 +15,7 @@ from quickapi.http_clients import (
     BaseHttpClientResponse,
     HTTPxClient,
 )
+from quickapi.http_clients.types import BaseHttpMethod
 from quickapi.serializers import (
     DictSerializable,
     DictSerializableT,
@@ -32,28 +32,11 @@ class BaseResponse(Generic[ResponseBodyT]):
     body: ResponseBodyT
 
 
-class BaseApiMethod(str, Enum):
-    """Supported HTTP methods."""
-
-    GET = "GET"
-    POST = "POST"
-    PUT = "PUT"
-    DELETE = "DELETE"
-    PATCH = "PATCH"
-    OPTIONS = "OPTIONS"
-    HEAD = "HEAD"
-    TRACE = "TRACE"
-
-    @staticmethod
-    def values() -> dict[str, Enum]:
-        return BaseApiMethod._value2member_map_
-
-
 class BaseApi(Generic[ResponseBodyT]):
     """Base class for all API endpoints."""
 
     url: str
-    method: BaseApiMethod = BaseApiMethod.GET
+    method: BaseHttpMethod = BaseHttpMethod.GET
     auth: BaseHttpClientAuth = None
     request_params: type[DictSerializableT] | None = None
     request_body: type[DictSerializableT] | None = None
@@ -92,7 +75,7 @@ class BaseApi(Generic[ResponseBodyT]):
 
         if (
             getattr(cls, "method", None) is not None
-            and cls.method not in BaseApiMethod.values()
+            and cls.method not in BaseHttpMethod.values()
         ):
             raise ClientSetupError(attribute="method")
 
@@ -116,6 +99,15 @@ class BaseApi(Generic[ResponseBodyT]):
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
     ) -> None:
+        self._load_overrides(request_params, request_body, http_client, auth)
+
+    def _load_overrides(
+        self,
+        request_params: "DictSerializableT | None" = None,
+        request_body: "DictSerializableT | None" = None,
+        http_client: BaseHttpClient | None = None,
+        auth: BaseHttpClientAuth = USE_DEFAULT,
+    ) -> None:
         self._request_params = request_params or self._request_params
         self._request_body = request_body or self._request_body
         self._http_client = http_client or self._http_client
@@ -130,84 +122,53 @@ class BaseApi(Generic[ResponseBodyT]):
     ) -> BaseResponse[ResponseBodyT]:
         """Execute the API request and return the response."""
 
-        self._request_params = request_params or self._request_params
-        self._request_body = request_body or self._request_body
-        self._http_client = http_client or self._http_client
-        self.auth = auth if auth != USE_DEFAULT else self.auth
-        try:
-            params = (
-                DictSerializable.to_dict(self._request_params)
-                if self._request_params
-                else {}
-            )
-            json = (
-                DictSerializable.to_dict(self._request_body)
-                if self._request_body
-                else {}
-            )
-        except DictDeserializationError as e:
-            raise RequestSerializationError(expected_type=e.expected_type) from e
+        self._load_overrides(request_params, request_body, http_client, auth)
+        request_params = self._parse_request_params(self._request_params)
+        request_body = self._parse_request_body(self._request_body)
 
-        match self.method:
-            case BaseApiMethod.GET:
-                client_response = self._http_client.get(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                )
-            case BaseApiMethod.OPTIONS:
-                client_response = self._http_client.options(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                )
-            case BaseApiMethod.HEAD:
-                client_response = self._http_client.head(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                )
-            case BaseApiMethod.POST:
-                client_response = self._http_client.post(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                    json=json,
-                )
-            case BaseApiMethod.PUT:
-                client_response = self._http_client.put(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                    json=json,
-                )
-            case BaseApiMethod.PATCH:
-                client_response = self._http_client.patch(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                    json=json,
-                )
-            case BaseApiMethod.DELETE:
-                client_response = self._http_client.delete(
-                    url=self.url,
-                    auth=self.auth,
-                    params=params,
-                )
-            case _:
-                raise NotImplementedError(f"Method {self.method} not implemented.")
+        client_response = self._http_client.send_request(
+            method=self.method,
+            url=self.url,
+            auth=self.auth,
+            params=request_params,
+            json=request_body,
+        )
+        self._check_response_for_errors(client_response)
 
+        body = self._parse_response_body(
+            klass=self._response_body_cls, body=client_response.json()
+        )
+        self._response = BaseResponse(client_response=client_response, body=body)
+
+        return self._response
+
+    def _check_response_for_errors(
+        self, client_response: BaseHttpClientResponse
+    ) -> None:
         # TODO: Add support for handling different response status codes
         if client_response.status_code != 200:
             raise HTTPError(client_response.status_code)
 
+    def _parse_request_params(self, params: "DictSerializableT | None") -> dict | None:
         try:
-            body = DictSerializable.from_dict(
-                self._response_body_cls, client_response.json()
-            )
+            params = DictSerializable.to_dict(params) if params else {}
+        except DictDeserializationError as e:
+            raise RequestSerializationError(expected_type=e.expected_type) from e
+        else:
+            return params
+
+    def _parse_request_body(self, body: "DictSerializableT | None") -> dict | None:
+        try:
+            body = DictSerializable.to_dict(body) if body else {}
+        except DictDeserializationError as e:
+            raise RequestSerializationError(expected_type=e.expected_type) from e
+        else:
+            return body
+
+    def _parse_response_body(
+        self, klass: type[ResponseBodyT], body: dict
+    ) -> ResponseBodyT:
+        try:
+            return DictSerializable.from_dict(klass, body)
         except DictSerializationError as e:
             raise ResponseSerializationError(expected_type=e.expected_type) from e
-
-        self._response = BaseResponse(client_response=client_response, body=body)
-
-        return self._response

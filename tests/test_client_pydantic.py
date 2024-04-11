@@ -26,7 +26,7 @@ class ResponseBody(BaseModel):
 # TODO: Build real mock API to easily test various scenarios?
 class PostPydanticApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     request_params = RequestParams
     request_body = RequestBody
     response_body = ResponseBody

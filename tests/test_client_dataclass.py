@@ -31,7 +31,7 @@ class ResponseBody:
 # TODO: Build real mock API to easily test various scenarios?
 class PostDataclassApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     request_params = RequestParams
     request_body = RequestBody
     response_body = ResponseBody

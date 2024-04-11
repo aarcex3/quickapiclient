@@ -1,6 +1,5 @@
 from quickapi.api import (  # noqa: F401
     BaseApi,
-    BaseApiMethod,
 )
 from quickapi.exceptions import (  # noqa: F401
     ClientSetupError,
@@ -13,6 +12,7 @@ from quickapi.exceptions import (  # noqa: F401
 )
 from quickapi.http_clients import (  # noqa: F401
     BaseHttpClient,
+    BaseHttpMethod,
     HTTPxClient,
     RequestsClient,
 )

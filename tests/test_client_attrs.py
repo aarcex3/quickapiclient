@@ -104,7 +104,7 @@ class TestGetWithParamsApi:
 
 
 class OptionsApi(GetApi):
-    method = quickapi.BaseApiMethod.OPTIONS
+    method = quickapi.BaseHttpMethod.OPTIONS
 
 
 # TODO: Reduce code duplication in tests
@@ -120,7 +120,7 @@ class TestOptionsApi:
 
 
 class HeadApi(GetApi):
-    method = quickapi.BaseApiMethod.HEAD
+    method = quickapi.BaseHttpMethod.HEAD
 
 
 class TestHeadApi:
@@ -135,7 +135,7 @@ class TestHeadApi:
 
 
 class DeleteApi(GetApi):
-    method = quickapi.BaseApiMethod.DELETE
+    method = quickapi.BaseHttpMethod.DELETE
 
 
 class TestDeleteApi:
@@ -151,7 +151,7 @@ class TestDeleteApi:
 
 class PostApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
-    method = quickapi.BaseApiMethod.POST
+    method = quickapi.BaseHttpMethod.POST
     request_params = RequestParams
     request_body = RequestBody
     response_body = ResponseBody
@@ -236,7 +236,7 @@ class TestPostApiRequestsClient:
 
 
 class PutApi(PostApi):
-    method = quickapi.BaseApiMethod.PUT
+    method = quickapi.BaseHttpMethod.PUT
 
 
 class TestPutApi:
@@ -257,7 +257,7 @@ class TestPutApi:
 
 
 class PatchApi(PostApi):
-    method = quickapi.BaseApiMethod.PATCH
+    method = quickapi.BaseHttpMethod.PATCH
 
 
 class TestPatchApi:

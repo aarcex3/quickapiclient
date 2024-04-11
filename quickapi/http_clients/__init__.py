@@ -4,4 +4,5 @@ from quickapi.http_clients.requests import RequestsClient  # noqa: F401
 from quickapi.http_clients.types import (  # noqa: F401
     BaseHttpClientAuth,
     BaseHttpClientResponse,
+    BaseHttpMethod,
 )
