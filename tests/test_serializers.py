@@ -5,11 +5,11 @@ import attrs
 import pydantic
 import pytest
 
-from quickapi.exceptions import (
+from quickapi import (
     DictDeserializationError,
+    DictSerializable,
     DictSerializationError,
 )
-from quickapi.serializers import DictSerializable
 
 
 @dataclasses.dataclass

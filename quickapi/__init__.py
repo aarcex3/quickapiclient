@@ -12,8 +12,6 @@ from .exceptions import (  # noqa: F401
     ResponseSerializationError,
 )
 from .http_client import BaseHttpClient, HTTPxClient, RequestsClient  # noqa: F401
-
-# TODO: should we check optional dep before import?
 from .serializers import (  # noqa: F401
     DictSerializable,
 )
