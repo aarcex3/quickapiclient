@@ -37,6 +37,14 @@ class DictSerializable:
     """
     Convert to/from dictionaries to the appropriate class/instance.
 
+    Currently, it will try to (de)serialize the following types:
+
+    1. dict
+    2. dataclasses
+    3. attrs (if installed)
+    4. pydantic (if installed)
+
+    In the future, you will be able to plug in your own (de)serializers instead.
     """
 
     # TODO: Maybe make the (de)serializer pluggable and configurable instead

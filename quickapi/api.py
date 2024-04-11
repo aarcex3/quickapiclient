@@ -45,12 +45,14 @@ class BaseApi(Generic[ResponseBodyT]):
     Attributes:
         url: The URL of the API endpoint.
         method: The HTTP method to be used for the request.
-        auth: Optional authentication to be used.
-        request_params: The request parameters (query strings) type.
-            Will be added to the URL.
-        request_body: The request body type (for POST, PUT, PATCH requests).
+        request_params: The request parameters type defines the expected format
+            for any parameters that will be added to the URL as query strings.
+        request_body: The request body type (for POST, PUT, PATCH requests)
+            defines the expected format the request body will need to be in.
         response_body: The expected response body type. The HTTP response body
             will be serialized to this type.
+        auth: Optional authentication to be used. Can be any class supported
+            by the HTTP client.
         http_client: Optional HTTP client to be used if not using the
             default (HTTPx). Or if wanting to customize the default client.
 
@@ -58,7 +60,7 @@ class BaseApi(Generic[ResponseBodyT]):
         ClientSetupError: If the class attributes are not correctly defined.
 
     Examples:
-        A ver basic example of a Cat Facts API definition:
+        A very basic example of a Cat Facts API definition:
 
         ```python
         import quickapi
@@ -67,7 +69,7 @@ class BaseApi(Generic[ResponseBodyT]):
         @dataclass
         class ResponseBody:
             current_page: int
-            data: list[Fact]
+            data: list[str]
 
 
         class MyApi(quickapi.BaseApi[ResponseBody]):
@@ -179,7 +181,11 @@ class BaseApi(Generic[ResponseBodyT]):
 
         Args:
             request_params: Optional request parameters to be sent with the request.
+                They will need to be of the same type as the configured
+                `BaseApi.request_params`.
             request_body: Optional request body to be sent with the request.
+                They will need to be of the same type as the configured
+                `BaseApi.request_body`.
             http_client: Optional HTTP client to be used for sending the request.
             auth: Optional authentication to be used for the request.
 
