@@ -34,6 +34,12 @@ class ResponseBody:
     data: list[Fact] = attrs.field(factory=list)
 
 
+@attrs.define
+class ResponseError401:
+    status: str
+    message: str
+
+
 # TODO: Build real mock API to easily test various scenarios?
 class GetApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
@@ -76,6 +82,7 @@ class GetWithParamsApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
     request_params = RequestParams
     response_body = ResponseBody
+    response_errors = {401: ResponseError401}  # noqa: RUF012
 
 
 class TestGetWithParamsApi:
@@ -101,6 +108,24 @@ class TestGetWithParamsApi:
         client = GetWithParamsApi()
         response = client.execute(request_params=request_params)
         assert response.body == cattrs.structure(mock_json, ResponseBody)
+
+    def test_api_call_with_custom_response_errors(self, httpx_mock: HTTPXMock):
+        mock_json = {"status": "Failure", "message": "Unauthorized"}
+        httpx_mock.add_response(
+            url=f"{GetWithParamsApi.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            json=mock_json,
+            status_code=401,
+        )
+
+        client = GetWithParamsApi()
+        with pytest.raises(quickapi.HTTPError) as e:
+            client.execute()
+
+        assert e.value.status_code == 401
+        assert e.value.handled is True
+        assert e.value.body == ResponseError401(
+            status="Failure", message="Unauthorized"
+        )
 
 
 class OptionsApi(GetApi):
@@ -358,8 +383,11 @@ class TestAuthWithBearerApi:
 
         auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
         client = AuthWithHeaderKeyApi()
-        with pytest.raises(quickapi.HTTPError):
+        with pytest.raises(quickapi.HTTPError) as e:
             client.execute(auth=auth)
+
+        assert e.value.status_code == 401
+        assert e.value.handled is False
 
 
 class TestClientSetupError:

@@ -1,3 +1,4 @@
+import pytest
 from pydantic import BaseModel, Field
 from pytest_httpx import HTTPXMock
 
@@ -23,6 +24,11 @@ class ResponseBody(BaseModel):
     data: list[Fact] = Field(default_factory=list)
 
 
+class ResponseError401(BaseModel):
+    status: str
+    message: str
+
+
 # TODO: Build real mock API to easily test various scenarios?
 class PostPydanticApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
@@ -30,6 +36,7 @@ class PostPydanticApi(quickapi.BaseApi[ResponseBody]):
     request_params = RequestParams
     request_body = RequestBody
     response_body = ResponseBody
+    response_errors = {401: ResponseError401}  # noqa: RUF012
 
 
 class TestGetPydanticApi:
@@ -74,3 +81,21 @@ class TestGetPydanticApi:
         )
         assert response.body.current_page == 1
         assert response.body.data[0] == Fact(fact="fact", length=4)
+
+    def test_api_call_with_custom_response_errors(self, httpx_mock: HTTPXMock):
+        mock_json = {"status": "Failure", "message": "Unauthorized"}
+        httpx_mock.add_response(
+            url=f"{PostPydanticApi.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            json=mock_json,
+            status_code=401,
+        )
+
+        client = PostPydanticApi()
+        with pytest.raises(quickapi.HTTPError) as e:
+            client.execute()
+
+        assert e.value.status_code == 401
+        assert e.value.handled is True
+        assert e.value.body == ResponseError401(
+            status="Failure", message="Unauthorized"
+        )
