@@ -295,10 +295,12 @@ class AuthResponseBody:
     authenticated: bool
     user: str
 
+
 @dataclass
 class ResponseError401:
     status: str
     message: str
+
 
 class MyApi(quickapi.BaseApi[AuthResponseBody]):
     url = "https://httpbin.org/bearer"
