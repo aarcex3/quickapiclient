@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, TypeVar, get_args
+from typing import Any, ClassVar, Generic, TypeVar, get_args
 
 from quickapi.exceptions import (
     ClientSetupError,
@@ -20,6 +20,7 @@ from quickapi.serializers import (
     DictSerializable,
     DictSerializableT,
 )
+from quickapi.serializers.types import FromDictSerializableT
 
 USE_DEFAULT = object()
 
@@ -51,6 +52,9 @@ class BaseApi(Generic[ResponseBodyT]):
             defines the expected format the request body will need to be in.
         response_body: The expected response body type. The HTTP response body
             will be serialized to this type.
+        response_errors: Optional dictionary of HTTP status codes -> response
+            type. The HTTP response body will be serialized to this type depending
+            on the HTTP status code returned.
         auth: Optional authentication to be used. Can be any class supported
             by the HTTP client.
         http_client: Optional HTTP client to be used if not using the
@@ -93,9 +97,10 @@ class BaseApi(Generic[ResponseBodyT]):
     request_params: type[DictSerializableT] | None = None
     request_body: type[DictSerializableT] | None = None
     response_body: type[ResponseBodyT]
+    response_errors: ClassVar[dict[int, type]] = {}
     http_client: BaseHttpClient | None = None
 
-    _http_client: BaseHttpClient = HTTPxClient()
+    _http_client: BaseHttpClient = HTTPxClient()  # TODO: Should it be a factory?
     _request_params: "DictSerializableT | None" = None
     _request_body: "DictSerializableT | None" = None
     _response_body_cls: type[ResponseBodyT]
@@ -210,7 +215,7 @@ class BaseApi(Generic[ResponseBodyT]):
             params=request_params,
             json=request_body,
         )
-        self._check_response_for_errors(client_response)
+        self._raise_for_errors(client_response)
 
         body = self._parse_response_body(
             klass=self._response_body_cls, body=client_response.json()
@@ -219,12 +224,34 @@ class BaseApi(Generic[ResponseBodyT]):
 
         return self._response
 
-    def _check_response_for_errors(
-        self, client_response: BaseHttpClientResponse
-    ) -> None:
-        # TODO: Add support for handling different response status codes
-        if client_response.status_code != 200:
-            raise HTTPError(client_response.status_code)
+    def _raise_for_errors(self, client_response: BaseHttpClientResponse) -> None:
+        match client_response.status_code:
+            case success if success in [200, 201]:
+                return
+            case _:
+                klass = (
+                    self.response_errors.get(client_response.status_code)
+                    if self.response_errors
+                    else None
+                )
+
+                if not klass:
+                    raise HTTPError(
+                        client_response,
+                        status_code=client_response.status_code,
+                        body=client_response.text,
+                        handled=False,
+                    )
+
+                raise HTTPError(
+                    client_response,
+                    status_code=client_response.status_code,
+                    body=self._parse_response_error(
+                        klass=klass,
+                        body=client_response.json(),
+                    ),
+                    handled=True,
+                )
 
     def _parse_request_params(self, params: "DictSerializableT | None") -> dict | None:
         try:
@@ -245,6 +272,14 @@ class BaseApi(Generic[ResponseBodyT]):
     def _parse_response_body(
         self, klass: type[ResponseBodyT], body: dict
     ) -> ResponseBodyT:
+        try:
+            return DictSerializable.from_dict(klass, body)
+        except DictSerializationError as e:
+            raise ResponseSerializationError(expected_type=e.expected_type) from e
+
+    def _parse_response_error(
+        self, klass: type[FromDictSerializableT], body: dict
+    ) -> Any:
         try:
             return DictSerializable.from_dict(klass, body)
         except DictSerializationError as e:

@@ -1,5 +1,6 @@
 import dataclasses
 
+import pytest
 from pytest_httpx import HTTPXMock
 
 import quickapi
@@ -28,6 +29,12 @@ class ResponseBody:
     data: list[Fact] = dataclasses.field(default_factory=list)
 
 
+@dataclasses.dataclass
+class ResponseError401:
+    status: str
+    message: str
+
+
 # TODO: Build real mock API to easily test various scenarios?
 class PostDataclassApi(quickapi.BaseApi[ResponseBody]):
     url = "https://example.com/facts"
@@ -35,6 +42,7 @@ class PostDataclassApi(quickapi.BaseApi[ResponseBody]):
     request_params = RequestParams
     request_body = RequestBody
     response_body = ResponseBody
+    response_errors = {401: ResponseError401}  # noqa: RUF012
 
 
 class TestGetDataclassApi:
@@ -79,3 +87,21 @@ class TestGetDataclassApi:
         )
         assert response.body.current_page == 1
         assert response.body.data[0] == Fact(fact="fact", length=4)
+
+    def test_api_call_with_custom_response_errors(self, httpx_mock: HTTPXMock):
+        mock_json = {"status": "Failure", "message": "Unauthorized"}
+        httpx_mock.add_response(
+            url=f"{PostDataclassApi.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            json=mock_json,
+            status_code=401,
+        )
+
+        client = PostDataclassApi()
+        with pytest.raises(quickapi.HTTPError) as e:
+            client.execute()
+
+        assert e.value.status_code == 401
+        assert e.value.handled is True
+        assert e.value.body == ResponseError401(
+            status="Failure", message="Unauthorized"
+        )

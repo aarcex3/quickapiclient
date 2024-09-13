@@ -1,3 +1,10 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from quickapi.http_clients.types import BaseHttpClientResponse
+    from quickapi.serializers.types import DictSerializableT
+
+
 class QuickApiException(Exception):
     """A QuickApi exception has occurred."""
 
@@ -13,8 +20,21 @@ class ClientSetupError(QuickApiException):
 class HTTPError(QuickApiException):
     """The response received a non `200` response status code."""
 
-    def __init__(self, status_code: int):
+    status_code: int
+    body: "DictSerializableT | str"
+    handled: bool = False
+
+    def __init__(
+        self,
+        client_response: "BaseHttpClientResponse",
+        status_code: int,
+        body: "DictSerializableT | str",
+        handled: bool = False,
+    ):
         message = f"HTTP request received a non `HTTP 200 (OK)` response. The response status code was `{status_code}`."
+        self.status_code = status_code
+        self.body = body
+        self.handled = handled
         super().__init__(message)
 
 

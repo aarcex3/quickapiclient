@@ -63,7 +63,7 @@ It's still early development but so far we have support for:
   - [x] Serialization/deserialization support
   - [x] Basic error and serialization handling
   - [ ] Nested/inner class definitions
-  - [ ] Improved HTTP status codes error handling
+  - [x] Fully typed HTTP status error codes handling
   - [x] Sessions support and/or allow building several related APIs through a single interface
   - [ ] Generate API boilerplate from OpenAPI specs
   - [ ] Full async support
@@ -261,6 +261,69 @@ client = MyApi()
 request_body = RequestBody(required_input="dummy")
 auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
 response = client.execute(request_body=request_body, auth=auth)
+```
+
+</details>
+
+### A POST request with error handling
+
+An example of a POST request with HTTP header API key that handles HTTP error codes too.
+
+<details>
+<summary>Click to expand</summary>
+
+```python
+from dataclasses import dataclass
+import httpx_auth
+import quickapi
+
+
+@dataclass
+class RequestBody:
+    required_input: str
+    optional_input: str | None = None
+
+
+@dataclass
+class Fact:
+    fact: str
+    length: int
+
+
+@dataclass
+class AuthResponseBody:
+    authenticated: bool
+    user: str
+
+@dataclass
+class ResponseError401:
+    status: str
+    message: str
+
+class MyApi(quickapi.BaseApi[AuthResponseBody]):
+    url = "https://httpbin.org/bearer"
+    method = quickapi.BaseHttpMethod.POST
+    response_body = AuthResponseBody
+    # Add more types for each HTTP status code you wish to handle
+    response_errors = {401: ResponseError401}
+```
+
+And to use it:
+
+```python
+client = MyApi()
+request_body = RequestBody(required_input="dummy")
+auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="incorrect_api_key")
+
+try:
+    response = client.execute(request_body=request_body, auth=auth)
+except quickapi.HTTPError as e:
+    match e.value.status_code:
+        case 401:
+            assert isinstance(e.value.body, ResponseError401)
+            print(f"Received {e.value.body.status} with {e.value.body.message}")
+        case _:
+            print("Unhandled error occured.")
 ```
 
 </details>
