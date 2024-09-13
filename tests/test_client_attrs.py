@@ -127,6 +127,20 @@ class TestGetWithParamsApi:
             status="Failure", message="Unauthorized"
         )
 
+    def test_api_call_with_custom_response_errors_unserializable(
+        self, httpx_mock: HTTPXMock
+    ):
+        mock_json = {"invalid_key": "Failure", "invalid_key_message": "Unauthorized"}
+        httpx_mock.add_response(
+            url=f"{GetWithParamsApi.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            json=mock_json,
+            status_code=401,
+        )
+
+        client = GetWithParamsApi()
+        with pytest.raises(quickapi.ResponseSerializationError):
+            client.execute()
+
 
 class OptionsApi(GetApi):
     method = quickapi.BaseHttpMethod.OPTIONS
