@@ -828,7 +828,7 @@ mkdocstrings = ">=0.24.2"
 name = "msgspec"
 version = "0.18.6"
 description = "A fast serialization and validation library, with builtin support for JSON, MessagePack, YAML, and TOML."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "msgspec-0.18.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:77f30b0234eceeff0f651119b9821ce80949b4d667ad38f3bfed0d0ebf9d6d8f"},
@@ -1644,10 +1644,11 @@ watchmedo = ["PyYAML (>=3.10)"]
 
 [extras]
 attrs = ["attrs", "cattrs"]
+msgspec = ["msgspec"]
 pydantic = ["pydantic"]
 requests = ["requests"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "fbdfc11176a6b693da014dba059f872a93365725f57bb855bbecd44d97359f74"
+content-hash = "329e2847b700cc6c6140867a30f90aff85a59fe54105dcdb8ddaf235f6785584"
