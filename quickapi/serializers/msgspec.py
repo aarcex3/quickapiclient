@@ -23,7 +23,7 @@ class MsgspecSerializer:
         cls, klass: type[FromDictSerializableT], values: dict
     ) -> FromDictSerializableT:
         try:
-            return klass(**values)
+            return msgspec.convert(values, klass)
         except msgspec.ValidationError as e:
             raise DictSerializationError(expected_type=klass.__name__) from e
 
@@ -37,4 +37,15 @@ class MsgspecDeserializer:
 
     @classmethod
     def to_dict(cls, instance: "msgspec.Struct") -> dict | None:
-        return msgspec.structs.asdict(instance)
+        data = msgspec.structs.asdict(instance)
+
+        def convert_nested(data):
+            if isinstance(data, list):
+                return [convert_nested(item) for item in data]
+            elif isinstance(data, dict):
+                return {key: convert_nested(value) for key, value in data.items()}
+            elif isinstance(data, msgspec.Struct):
+                return cls.to_dict(data)
+            return data
+
+        return convert_nested(data)

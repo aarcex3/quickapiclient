@@ -1,12 +1,10 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from quickapi.exceptions import (
-    DictDeserializationError,
-    DictSerializationError,
-)
+from quickapi.exceptions import DictDeserializationError, DictSerializationError
 from quickapi.serializers.attrs import AttrsDeserializer, AttrsSerializer
 from quickapi.serializers.dataclass import DataclassDeserializer, DataclassSerializer
+from quickapi.serializers.msgspec import MsgspecDeserializer, MsgspecSerializer
 from quickapi.serializers.pydantic import PydanticDeserializer, PydanticSerializer
 from quickapi.serializers.types import DictSerializableT, FromDictSerializableT
 
@@ -43,6 +41,7 @@ class DictSerializable:
     2. dataclasses
     3. attrs (if installed)
     4. pydantic (if installed)
+    5. msgspec (if installed)
 
     In the future, you will be able to plug in your own (de)serializers instead.
     """
@@ -52,11 +51,13 @@ class DictSerializable:
         DataclassSerializer,
         AttrsSerializer,
         PydanticSerializer,
+        MsgspecSerializer,
     )
     deserializers: Sequence[type[BaseDeserializer]] = (  # type: ignore [assignment]
         DataclassDeserializer,
         AttrsDeserializer,
         PydanticDeserializer,
+        MsgspecDeserializer,
     )
 
     @classmethod

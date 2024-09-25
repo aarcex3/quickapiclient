@@ -2,14 +2,11 @@ import dataclasses
 from typing import ClassVar
 
 import attrs
+import msgspec
 import pydantic
 import pytest
 
-from quickapi import (
-    DictDeserializationError,
-    DictSerializable,
-    DictSerializationError,
-)
+from quickapi import DictDeserializationError, DictSerializable, DictSerializationError
 
 
 @dataclasses.dataclass
@@ -46,10 +43,20 @@ class PydanticComplexModel(pydantic.BaseModel):
     data: list[PydanticFact] = pydantic.Field(default_factory=list)
 
 
+class MsgspecFact(msgspec.Struct):
+    fact: str
+    length: int
+
+
+class MsgspecComplexModel(msgspec.Struct):
+    current_page: int
+    data: list[MsgspecFact] = msgspec.field(default_factory=list)
+
+
 class TestSerializers:
     simple_model: ClassVar = {"fact": "fact", "length": 4}
     complex_model: ClassVar = {"current_page": 1, "data": [simple_model]}
-    invalid_model: ClassVar = {"current_page": "not_int", "data": []}
+    invalid_model: ClassVar = {"current_page": "not_int", "data": 9}
 
     @pytest.mark.parametrize(
         "input_data",
@@ -57,6 +64,7 @@ class TestSerializers:
             DataclassFact(**simple_model),
             AttrsFact(**simple_model),
             PydanticFact(**simple_model),
+            MsgspecFact(**simple_model),
         ],
     )
     def test_to_and_from_simple_model(self, input_data):
@@ -72,6 +80,7 @@ class TestSerializers:
             DataclassComplexModel(current_page=1, data=[DataclassFact(**simple_model)]),
             AttrsComplexModel(current_page=1, data=[AttrsFact(**simple_model)]),
             PydanticComplexModel(current_page=1, data=[PydanticFact(**simple_model)]),
+            MsgspecComplexModel(current_page=1, data=[MsgspecFact(**simple_model)]),
         ],
     )
     def test_to_and_from_complex_model(self, input_data):
@@ -98,6 +107,7 @@ class TestSerializers:
             (DataclassComplexModel, invalid_model),
             (AttrsComplexModel, invalid_model),
             (PydanticComplexModel, invalid_model),
+            (MsgspecComplexModel, invalid_model),
             (object, invalid_model),
         ],
     )
