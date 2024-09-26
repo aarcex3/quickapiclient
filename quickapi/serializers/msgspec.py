@@ -1,5 +1,3 @@
-from typing import Any
-
 from quickapi.exceptions import DictSerializationError
 from quickapi.serializers.types import FromDictSerializableT
 
@@ -39,15 +37,4 @@ class MsgspecDeserializer:
 
     @classmethod
     def to_dict(cls, instance: "msgspec.Struct") -> dict | None:
-        data = msgspec.structs.asdict(instance)
-
-        def convert_nested(data: dict[str, Any]) -> dict[Any, Any] | None:
-            if isinstance(data, list):
-                return [convert_nested(item) for item in data]
-            elif isinstance(data, dict):
-                return {key: convert_nested(value) for key, value in data.items()}
-            elif isinstance(data, msgspec.Struct):
-                return cls.to_dict(data)
-            return data
-
-        return convert_nested(data)
+        return msgspec.to_builtins(instance, builtin_types=[dict])
