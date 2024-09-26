@@ -41,7 +41,7 @@ class PostMsgspecApi(quickapi.BaseApi[ResponseBody]):
     response_errors = {401: ResponseError401}  # noqa: RUF012
 
 
-class TestGetPydanticApi:
+class TestPostMsgspecApi:
     def test_api_call_with_default_request_params(self, httpx_mock: HTTPXMock):
         mock_json = {"current_page": 1, "data": [{"fact": "Some fact", "length": 9}]}
         httpx_mock.add_response(
