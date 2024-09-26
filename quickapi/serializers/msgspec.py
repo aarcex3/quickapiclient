@@ -1,3 +1,5 @@
+from typing import Any
+
 from quickapi.exceptions import DictSerializationError
 from quickapi.serializers.types import FromDictSerializableT
 
@@ -36,5 +38,5 @@ class MsgspecDeserializer:
         return msgspec_installed and isinstance(instance, msgspec.Struct)
 
     @classmethod
-    def to_dict(cls, instance: "msgspec.Struct") -> dict | None:
+    def to_dict(cls, instance: "msgspec.Struct") -> Any:
         return msgspec.to_builtins(instance, builtin_types=[dict])

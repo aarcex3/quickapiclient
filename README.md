@@ -81,6 +81,7 @@ It's still early development but so far we have support for:
   - [x] attrs
   - [x] dataclasses
   - [x] pydantic
+  - [x] msgspec
 - API support
   - [x] REST
   - [ ] GraphQL
@@ -100,6 +101,8 @@ pip install quickapiclient
 pip install quickapiclient[attrs]
 # Or if you want to use `pydantic` over `dataclasses`:
 pip install quickapiclient[pydantic]
+# Or if you want to use `msgspec` over `pydantic`:
+pip install quickapiclient[msgspec]
 # Or if you want to use `requests` over `httpx`:
 pip install quickapiclient[requests]
 ```
@@ -112,6 +115,8 @@ poetry add quickapiclient
 poetry add quickapiclient[attrs]
 # Or if you want to use `pydantic` over `dataclasses`:
 poetry add quickapiclient[pydantic]
+# Or if you want to use `msgspec` over `pydantic`:
+poetry add quickapiclient[msgspec]
 # Or if you want to use `requests` over `httpx`:
 poetry add quickapiclient[requests]
 ```
@@ -425,6 +430,53 @@ response = client.execute(request_body=request_body)
 ```
 
 Check out [pydantic](https://github.com/pydantic/pydantic) for full configuration.
+
+</details>
+
+### A POST request with validation and conversion (Using `msgspec`)
+
+An example of a POST request with custom validators and converters (using `msgspec` instead).
+
+<details>
+<summary>Click to expand</summary>
+
+```python
+import enum
+from typing import Annotated
+
+import msgspec
+import quickapi
+
+
+
+class State(enum.Enum):
+    ON = "on"
+    OFF = "off"
+
+
+class RequestBody(msgspec.Struct):
+    state: State
+    email: str = Annotated[str, msgspec.Meta(pattern=r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')]
+
+
+class ResponseBody(msgspec.Struct):
+    success: bool
+
+
+class MyApi(quickapi.BaseApi[ResponseBody]):
+    url = "https://example.com/"
+    method = quickapi.BaseHttpMethod.POST
+    request_body = RequestBody
+    response_body = ResponseBody
+```
+
+And to use it:
+
+```python
+client = MyApi()
+request_body = RequestBody(email="invalid_email", state="on") # Will raise an error
+response = client.execute(request_body=request_body)
+```
 
 </details>
 
