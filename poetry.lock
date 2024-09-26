@@ -828,7 +828,7 @@ mkdocstrings = ">=0.24.2"
 name = "msgspec"
 version = "0.18.6"
 description = "A fast serialization and validation library, with builtin support for JSON, MessagePack, YAML, and TOML."
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "msgspec-0.18.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:77f30b0234eceeff0f651119b9821ce80949b4d667ad38f3bfed0d0ebf9d6d8f"},
@@ -1651,4 +1651,4 @@ requests = ["requests"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "329e2847b700cc6c6140867a30f90aff85a59fe54105dcdb8ddaf235f6785584"
+content-hash = "38b18294c72437c9756a21c471a136df17c04fb21d9312b19bfaff0d46326d76"
