@@ -11,3 +11,7 @@
 # Pydantic
 
 ::: quickapi.serializers.pydantic
+
+# Msgspec
+
+::: quickapi.serializers.msgspec
