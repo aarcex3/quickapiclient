@@ -1,1 +1,3 @@
+::: quickapi.client
+
 ::: quickapi.api

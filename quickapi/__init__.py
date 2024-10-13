@@ -1,6 +1,10 @@
 from quickapi.api import (  # noqa: F401
     BaseApi,
 )
+from quickapi.client import (  # noqa: F401
+    ApiEndpoint,
+    BaseClient,
+)
 from quickapi.exceptions import (  # noqa: F401
     ClientSetupError,
     DictDeserializationError,

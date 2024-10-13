@@ -155,8 +155,9 @@ class BaseApi(Generic[ResponseBodyT]):
         request_body: "DictSerializableT | None" = None,
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
+        base_url: str | object | None = None,
     ) -> None:
-        self._load_overrides(request_params, request_body, http_client, auth)
+        self._load_overrides(request_params, request_body, http_client, auth, base_url)
 
     def _load_overrides(
         self,
@@ -164,11 +165,17 @@ class BaseApi(Generic[ResponseBodyT]):
         request_body: "DictSerializableT | None" = None,
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
+        base_url: str | object | None = None,
     ) -> None:
         self._request_params = request_params or self._request_params
         self._request_body = request_body or self._request_body
         self._http_client = http_client or self._http_client
         self.auth = auth if auth != USE_DEFAULT else self.auth
+        self.url = (
+            f"{base_url}{self.url}"
+            if base_url and base_url != USE_DEFAULT
+            else self.url
+        )
 
     def execute(
         self,
