@@ -5,9 +5,7 @@ from typing_extensions import Self
 from quickapi.api import USE_DEFAULT, BaseApi, BaseResponse, ResponseBodyT
 from quickapi.exceptions import ClientSetupError
 from quickapi.http_clients import BaseHttpClient, BaseHttpClientAuth, HTTPxClient
-from quickapi.serializers import (
-    DictSerializableT,
-)
+from quickapi.serializers import DictSerializableT
 
 
 class BaseClient:
@@ -32,7 +30,7 @@ class BaseClient:
         ClientSetupError: If the class attributes are not correctly defined.
 
     Examples:
-        A very basic example of a Cat Facts API client definition:
+        A very basic example of an API client definition:
 
         ```python
         import quickapi
@@ -44,13 +42,14 @@ class BaseClient:
             data: list[str]
 
 
-        class MyApi(quickapi.BaseApi[ResponseBody]):
+        class GetFactsApi(quickapi.BaseApi[ResponseBody]):
             url = "/facts"
             response_body = ResponseBody
 
+
         class MyClient(quickapi.BaseClient):
-            base_url = "https://catfact.ninja"
-            get_facts = quickapi.ClientApi(MyApi)
+            base_url = "https://example.com"
+            get_facts = quickapi.ApiEndpoint(GetFactsApi)
         ```
 
         Which can be used like this:
@@ -83,6 +82,8 @@ class ApiEndpoint(Generic[ResponseBodyT]):
 
     Allows us to share state (like auth or HTTP client) between API endpoints
     of the same client.
+
+    See `BaseClient` for an example of how to use this.
     """
 
     def __init__(self, cls: type[BaseApi[ResponseBodyT]]):
@@ -125,9 +126,6 @@ class ApiEndpoint(Generic[ResponseBodyT]):
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
     ) -> BaseResponse[ResponseBodyT]:
-        """
-        Execute the API call.
-        """
         if self._api is None:
             raise AttributeError("API endpoint not part of a `BaseClient` instance.")  # noqa: TRY003
 

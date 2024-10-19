@@ -16,10 +16,7 @@ from quickapi.http_clients import (
     HTTPxClient,
 )
 from quickapi.http_clients.types import BaseHttpMethod
-from quickapi.serializers import (
-    DictSerializable,
-    DictSerializableT,
-)
+from quickapi.serializers import DictSerializable, DictSerializableT
 from quickapi.serializers.types import FromDictSerializableT
 
 USE_DEFAULT = object()
@@ -38,7 +35,7 @@ class BaseApi(Generic[ResponseBodyT]):
     Base class for all API endpoints.
 
     Subclass from `BaseApi` and define appropriate attributes from
-    the list below to create your own API client endpoint.
+    the list below to create your own API endpoint.
 
     Make sure to add in the generic type for the expected response body, so that
     you can get a fully typed response object.
@@ -64,7 +61,7 @@ class BaseApi(Generic[ResponseBodyT]):
         ApiSetupError: If the class attributes are not correctly defined.
 
     Examples:
-        A very basic example of a Cat Facts API definition:
+        A very basic example of a standalone API endpoint definition:
 
         ```python
         import quickapi

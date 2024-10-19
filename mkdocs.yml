@@ -8,8 +8,11 @@ repo_name: martinn/quickapiclient
 
 nav:
   - Home: index.md
+  - Usage: usage.md
   - API Reference:
-      - BaseApi: api_reference/index.md
+      - BaseClient: api_reference/base_client.md
+      - ApiEndpoint: api_reference/api_endpoint.md
+      - BaseApi: api_reference/base_api.md
       - Exceptions: api_reference/exceptions.md
       - HTTP clients: api_reference/http_clients.md
       - Serializers: api_reference/serializers.md
@@ -61,3 +64,4 @@ markdown_extensions:
       auto_title: true
   - pymdownx.superfences
   - markdown_checklist.extension
+  - mdx_truly_sane_lists

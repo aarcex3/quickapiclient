@@ -1,3 +1,1 @@
-::: quickapi.client
-
-::: quickapi.api
+./base_client.md
