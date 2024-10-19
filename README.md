@@ -106,13 +106,13 @@ You can easily install this using `pip`:
 
 ```console
 pip install quickapiclient
-# Or if you want to use `attrs` over `dataclasses`:
+# Or if you want to use attrs over dataclasses:
 pip install quickapiclient[attrs]
-# Or if you want to use `pydantic` over `dataclasses`:
+# Or if you want to use pydantic over dataclasses:
 pip install quickapiclient[pydantic]
-# Or if you want to use `msgspec` over `pydantic`:
+# Or if you want to use msgspec over dataclasses:
 pip install quickapiclient[msgspec]
-# Or if you want to use `requests` over `httpx`:
+# Or if you want to use requests over httpx:
 pip install quickapiclient[requests]
 ```
 
@@ -120,13 +120,13 @@ Or if using `poetry`:
 
 ```console
 poetry add quickapiclient
-# Or if you want to use `attrs` over `dataclasses`:
+# Or if you want to use attrs over dataclasses:
 poetry add quickapiclient[attrs]
-# Or if you want to use `pydantic` over `dataclasses`:
+# Or if you want to use pydantic over dataclasses:
 poetry add quickapiclient[pydantic]
-# Or if you want to use `msgspec` over `pydantic`:
+# Or if you want to use msgspec over dataclasses:
 poetry add quickapiclient[msgspec]
-# Or if you want to use `requests` over `httpx`:
+# Or if you want to use requests over httpx:
 poetry add quickapiclient[requests]
 ```
 
