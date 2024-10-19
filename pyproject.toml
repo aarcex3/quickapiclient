@@ -40,6 +40,7 @@ mkdocs = "^1.6.1"
 mkdocs-material = "^9.5.21"
 mkdocstrings = { extras = ["python"], version = "^0.26.2" }
 markdown-checklist = "^0.4.4"
+mdx-truly-sane-lists = "^1.3"
 
 [tool.poetry.extras]
 requests = ["requests"]

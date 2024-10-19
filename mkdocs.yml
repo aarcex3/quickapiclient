@@ -64,3 +64,4 @@ markdown_extensions:
       auto_title: true
   - pymdownx.superfences
   - markdown_checklist.extension
+  - mdx_truly_sane_lists
