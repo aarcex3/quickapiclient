@@ -1,4 +1,6 @@
-from typing import Any, Generic, NoReturn, Self, overload
+from typing import Any, Generic, NoReturn, overload
+
+from typing_extensions import Self
 
 from quickapi.api import USE_DEFAULT, BaseApi, BaseResponse, ResponseBodyT
 from quickapi.exceptions import ClientSetupError
