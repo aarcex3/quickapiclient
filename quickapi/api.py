@@ -91,7 +91,7 @@ class BaseApi(Generic[ResponseBodyT]):
 
     """
 
-    url: str
+    url: str = "/"
     method: BaseHttpMethod = BaseHttpMethod.GET
     auth: BaseHttpClientAuth = None
     request_params: type[DictSerializableT] | None = None
@@ -120,9 +120,6 @@ class BaseApi(Generic[ResponseBodyT]):
 
     @classmethod
     def _validate_subclass(cls) -> None:
-        if getattr(cls, "url", None) is None:
-            raise ApiSetupError(attribute="url")
-
         if getattr(cls, "response_body", None) is None:
             raise ApiSetupError(attribute="response_body")
 
