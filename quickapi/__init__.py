@@ -6,6 +6,7 @@ from quickapi.client import (  # noqa: F401
     BaseClient,
 )
 from quickapi.exceptions import (  # noqa: F401
+    ApiSetupError,
     ClientSetupError,
     DictDeserializationError,
     DictSerializationError,

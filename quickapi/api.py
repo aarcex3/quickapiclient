@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Generic, TypeVar, get_args
 
 from quickapi.exceptions import (
-    ClientSetupError,
+    ApiSetupError,
     DictDeserializationError,
     DictSerializationError,
     HTTPError,
@@ -61,7 +61,7 @@ class BaseApi(Generic[ResponseBodyT]):
             default (HTTPx). Or if wanting to customize the default client.
 
     Raises:
-        ClientSetupError: If the class attributes are not correctly defined.
+        ApiSetupError: If the class attributes are not correctly defined.
 
     Examples:
         A very basic example of a Cat Facts API definition:
@@ -125,21 +125,21 @@ class BaseApi(Generic[ResponseBodyT]):
     @classmethod
     def _validate_subclass(cls) -> None:
         if getattr(cls, "url", None) is None:
-            raise ClientSetupError(attribute="url")
+            raise ApiSetupError(attribute="url")
 
         if getattr(cls, "response_body", None) is None:
-            raise ClientSetupError(attribute="response_body")
+            raise ApiSetupError(attribute="response_body")
 
         if (
             getattr(cls, "method", None) is not None
             and cls.method not in BaseHttpMethod.values()
         ):
-            raise ClientSetupError(attribute="method")
+            raise ApiSetupError(attribute="method")
 
         if getattr(cls, "http_client", None) is not None and not (
             isinstance(cls.http_client, BaseHttpClient)
         ):
-            raise ClientSetupError(attribute="http_client")
+            raise ApiSetupError(attribute="http_client")
 
         if getattr(cls, "__orig_bases__", None) is not None:
             response_body_generic_type = get_args(cls.__orig_bases__[0])[0]  # type: ignore [attr-defined]
@@ -147,7 +147,7 @@ class BaseApi(Generic[ResponseBodyT]):
                 isinstance(response_body_generic_type, TypeVar)
                 and response_body_generic_type.__name__ == "ResponseBodyT"
             ):
-                raise ClientSetupError(attribute="ResponseBodyT")
+                raise ApiSetupError(attribute="ResponseBodyT")
 
     def __init__(
         self,
