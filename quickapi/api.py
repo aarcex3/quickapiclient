@@ -55,10 +55,10 @@ class BaseApi(Generic[ResponseBodyT]):
         response_errors: Optional dictionary of HTTP status codes -> response
             type. The HTTP response body will be serialized to this type depending
             on the HTTP status code returned.
-        auth: Optional authentication to be used. Can be any class supported
-            by the HTTP client.
         http_client: Optional HTTP client to be used if not using the
             default (HTTPx). Or if wanting to customize the default client.
+        auth: Optional authentication to be used. Can be any class supported
+            by the HTTP client.
 
     Raises:
         ApiSetupError: If the class attributes are not correctly defined.
@@ -98,9 +98,8 @@ class BaseApi(Generic[ResponseBodyT]):
     request_body: type[DictSerializableT] | None = None
     response_body: type[ResponseBodyT]
     response_errors: ClassVar[dict[int, type]] = {}
-    http_client: BaseHttpClient | None = None
+    http_client: BaseHttpClient = HTTPxClient()
 
-    _http_client: BaseHttpClient = HTTPxClient()  # TODO: Should it be a factory?
     _request_params: "DictSerializableT | None" = None
     _request_body: "DictSerializableT | None" = None
     _response_body_cls: type[ResponseBodyT]
@@ -118,9 +117,6 @@ class BaseApi(Generic[ResponseBodyT]):
             cls._request_body = cls.request_body()
 
         cls._response_body_cls = cls.response_body  # pyright: ignore [reportGeneralTypeIssues]
-
-        if cls.http_client is not None:
-            cls._http_client = cls.http_client
 
     @classmethod
     def _validate_subclass(cls) -> None:
@@ -169,7 +165,7 @@ class BaseApi(Generic[ResponseBodyT]):
     ) -> None:
         self._request_params = request_params or self._request_params
         self._request_body = request_body or self._request_body
-        self._http_client = http_client or self._http_client
+        self.http_client = http_client or self.http_client
         self.auth = auth if auth != USE_DEFAULT else self.auth
         self.url = (
             f"{base_url}{self.url}"
@@ -215,7 +211,7 @@ class BaseApi(Generic[ResponseBodyT]):
         request_params = self._parse_request_params(self._request_params)
         request_body = self._parse_request_body(self._request_body)
 
-        client_response = self._http_client.send_request(
+        client_response = self.http_client.send_request(
             method=self.method,
             url=self.url,
             auth=self.auth,
