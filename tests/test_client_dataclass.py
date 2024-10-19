@@ -14,6 +14,17 @@ class Fact:
 
 
 @dataclasses.dataclass
+class ResponseBody:
+    current_page: int
+    data: list[Fact]
+
+
+class GetDataClassApi(quickapi.BaseApi[ResponseBody]):
+    url = "/facts"
+    response_body = ResponseBody
+
+
+@dataclasses.dataclass
 class RequestParams:
     max_length: int = 100
     limit: int = 10
@@ -25,22 +36,17 @@ class RequestBody:
 
 
 @dataclasses.dataclass
-class ResponseBody:
-    current_page: int
-    data: list[Fact] = dataclasses.field(default_factory=list)
+class PostResponseBody:
+    success: bool
+    message: str
 
 
-class GetDataClassApi(quickapi.BaseApi[ResponseBody]):
-    url = "/facts"
-    response_body = ResponseBody
-
-
-class PostDataclassApi(quickapi.BaseApi[ResponseBody]):
+class PostDataclassApi(quickapi.BaseApi[PostResponseBody]):
     url = "/facts"
     method = quickapi.BaseHttpMethod.POST
     request_params = RequestParams
     request_body = RequestBody
-    response_body = ResponseBody
+    response_body = PostResponseBody
 
 
 class ExampleClient(quickapi.BaseClient):
@@ -66,7 +72,7 @@ class TestExampleClient:
         assert response.body.data[0] == Fact(fact="Some fact", length=9)
 
     def test_api_client_submit(self, httpx_mock: HTTPXMock):
-        mock_json = {"current_page": 1, "data": [{"fact": "Some fact", "length": 9}]}
+        mock_json = {"success": True, "message": "Success"}
         client = ExampleClient(
             auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
         )
@@ -78,8 +84,8 @@ class TestExampleClient:
         )
 
         response = client.submit()
-        assert response.body.current_page == 1
-        assert response.body.data[0] == Fact(fact="Some fact", length=9)
+        assert response.body.success is True
+        assert response.body.message == "Success"
 
 
 class TestClientSetupError:
