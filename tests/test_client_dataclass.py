@@ -1,6 +1,7 @@
 import dataclasses
 
 import httpx_auth
+import pytest
 from pytest_httpx import HTTPXMock
 
 import quickapi
@@ -79,3 +80,26 @@ class TestExampleClient:
         response = client.submit()
         assert response.body.current_page == 1
         assert response.body.data[0] == Fact(fact="Some fact", length=9)
+
+
+class TestClientSetupError:
+    def test_if_invalid_api_endpoint_cls(self, httpx_mock: HTTPXMock):
+        with pytest.raises(quickapi.ClientSetupError):
+
+            class _(quickapi.BaseClient):
+                invalid_endpoint = quickapi.ApiEndpoint(object)  # type: ignore [reportArgumentType]
+
+    def test_if_api_endpoint_not_part_of_base_client(self, httpx_mock: HTTPXMock):
+        lone_api_endpoint = quickapi.ApiEndpoint(GetDataClassApi)
+        with pytest.raises(AttributeError):
+            lone_api_endpoint()
+
+    def test_if_api_endpoint_descriptor_set(self, httpx_mock: HTTPXMock):
+        client = ExampleClient()
+        with pytest.raises(AttributeError):
+            client.fetch = "invalid"
+
+    def test_if_api_endpoint_descriptor_del(self, httpx_mock: HTTPXMock):
+        client = ExampleClient()
+        with pytest.raises(AttributeError):
+            del client.fetch

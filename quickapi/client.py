@@ -120,7 +120,7 @@ class ApiEndpoint(Generic[ResponseBodyT]):
         Execute the API call.
         """
         if self._api is None:
-            raise AttributeError("API endpoint has not been initialized.")  # noqa: TRY003
+            raise AttributeError("API endpoint not part of a `BaseClient` instance.")  # noqa: TRY003
         return self._api.execute()
 
     def __set__(self, instance: BaseClient, value: Any) -> NoReturn:
