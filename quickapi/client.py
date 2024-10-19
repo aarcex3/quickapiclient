@@ -44,13 +44,14 @@ class BaseClient:
             data: list[str]
 
 
-        class MyApi(quickapi.BaseApi[ResponseBody]):
+        class GetFactsApi(quickapi.BaseApi[ResponseBody]):
             url = "/facts"
             response_body = ResponseBody
 
+
         class MyClient(quickapi.BaseClient):
-            base_url = "https://catfact.ninja"
-            get_facts = quickapi.ClientApi(MyApi)
+            base_url = "https://example.com"
+            get_facts = quickapi.ClientApi(GetFactsApi)
         ```
 
         Which can be used like this:

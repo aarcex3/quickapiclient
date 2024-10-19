@@ -27,60 +27,40 @@ class Fact:
 
 # What the API response should look like
 @dataclass
-class GetFactsResponseBody:
+class ResponseBody:
     current_page: int
     data: list[Fact]
 
 
-# We define our first API endpoint
-class GetFacts(quickapi.BaseApi[GetFactsResponseBody]):
+# We define an API endpoint
+class GetFactsApi(quickapi.BaseApi[ResponseBody]):
     url = "/facts"
-    response_body = GetFactsResponseBody
+    response_body = ResponseBody
 
 
-@dataclasses.dataclass
-class SubmitFactRequestBody:
-    fact: str
-
-
-@dataclasses.dataclass
-class SubmitFactResponseBody:
-    success: bool
-    message: str
-
-
-class SubmitFact(quickapi.BaseApi[PostResponseBody]):
-    url = "/facts/new"
-    method = quickapi.BaseHttpMethod.POST
-    request_body = RequestBody
-    response_body = PostResponseBody
-
-
+# And now our API client
 class ExampleClient(quickapi.BaseClient):
     base_url = "https://example.com"
-    get_facts = quickapi.ApiEndpoint(GetFacts)
-    submit_fact = quickapi.ApiEndpoint(SubmitFact)
+    get_facts = quickapi.ApiEndpoint(GetFactsApi)
+    # Other endpoints would follow here:
+    # submit_fact = quickapi.ApiEndpoint(SubmitFactApi)
 ```
 
 And you would use it like this:
 
 ```python
 client = ExampleClient()
-
 response = client.get_facts()
 
-# `response` is fully typed and conforms to our `GetFactsResponseBody` definition
-assert isinstance(response.body, GetFactsResponseBody)
+# `response` is fully typed and conforms to our `ResponseBody` definition
+assert isinstance(response.body, ResponseBody)
 assert isinstance(response.body.data[0], Fact)
 
-response = client.submit_fact(SubmitFactRequestBody(fact="Some new fact."))
-
-# `response` is fully typed and conforms to our `SubmitFactResponseBody` definition
-assert isinstance(response.body, SubmitFactResponseBody)
-assert isinstance(response.body.success, bool)
+# `reveal_type(response.body)` returns `Revealed type is 'ResponseBody'` too,
+# which means full typing and IDE support.
 ```
 
-There's also support for `attrs` or `pydantic` for more complex modeling, validation or serialization support.
+There's also support for `attrs`, `pydantic` and `msgspec` for more complex modeling, validation or serialization support.
 
 Scroll down [here](#a-post-request-with-validation-and-conversion-using-attrs) for examples using those.
 
@@ -93,11 +73,9 @@ It's still early development but so far we have support for:
   - [x] Fully typed response body
   - [x] Serialization/deserialization support
   - [x] Basic error and serialization handling
-  - [ ] Nested/inner class definitions
   - [x] Fully typed HTTP status error codes handling
-  - [x] Sessions support and/or allow building several related APIs through a single interface
+  - [ ] Nested/inner class definitions
   - [ ] Generate API boilerplate from OpenAPI specs
-  - [ ] Full async support
 - HTTP client libraries
   - [x] httpx
   - [x] requests
@@ -162,9 +140,7 @@ An example of a GET request with query parameters with overridable default value
 <summary>Click to expand</summary>
 
 ```python
-from dataclasses import dataclass
-import quickapi
-
+# ...
 
 @dataclass
 class RequestParams:
@@ -172,34 +148,27 @@ class RequestParams:
     limit: int = 10
 
 
-@dataclass
-class Fact:
-    fact: str
-    length: int
-
-
-@dataclass
-class ResponseBody:
-    current_page: int
-    data: list[Fact]
-
-
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://catfact.ninja/facts"
+class GetFactsApi(quickapi.BaseApi[ResponseBody]):
+    url = "/facts"
     request_params = RequestParams
     response_body = ResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    get_facts = quickapi.ApiEndpoint(GetFactsApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
+client = ExampleClient()
 # Using default request param values
-response = client.execute()
+response = client.get_facts()
 
 # Using custom request param values
 request_params = RequestParams(max_length=5, limit=10)
-response = client.execute(request_params=request_params)
+response = client.get_facts(request_params=request_params)
 ```
 
 </details>
@@ -212,9 +181,7 @@ An example of a POST request with some optional and required data.
 <summary>Click to expand</summary>
 
 ```python
-from dataclasses import dataclass
-import quickapi
-
+# ...
 
 @dataclass
 class RequestBody:
@@ -223,30 +190,30 @@ class RequestBody:
 
 
 @dataclass
-class Fact:
-    fact: str
-    length: int
+class SubmitResponseBody:
+    success: bool
+    message: str
 
 
-@dataclass
-class ResponseBody:
-    current_page: int
-    data: list[Fact]
-
-
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://catfact.ninja/facts"
+class SubmitFactApi(quickapi.BaseApi[SubmitResponseBody]):
+    url = "/facts/new"
     method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
-    response_body = ResponseBody
+    response_body = SubmitResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    get_facts = quickapi.ApiEndpoint(GetFactsApi)
+    submit_fact = quickapi.ApiEndpoint(SubmitFactApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
+client = ExampleClient()
 request_body = RequestBody(required_input="dummy")
-response = client.execute(request_body=request_body)
+response = client.submit_fact(request_body=request_body)
 ```
 
 </details>
@@ -259,78 +226,54 @@ An example of a POST request with HTTP header API key.
 <summary>Click to expand</summary>
 
 ```python
-from dataclasses import dataclass
 import httpx_auth
-import quickapi
 
+# ...
 
-@dataclass
-class RequestBody:
-    required_input: str
-    optional_input: str | None = None
-
-
-@dataclass
-class Fact:
-    fact: str
-    length: int
-
-
-@dataclass
-class AuthResponseBody:
-    authenticated: bool
-    user: str
-
-
-class MyApi(quickapi.BaseApi[AuthResponseBody]):
-    url = "https://httpbin.org/bearer"
+class SubmitFactApi(quickapi.BaseApi[SubmitResponseBody]):
+    url = "/facts/new"
     method = quickapi.BaseHttpMethod.POST
-    # You could specify it here if you wanted
+    # Specify it here if you want all requests to this endpoint to have auth
     # auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
-    response_body = AuthResponseBody
+    request_body = RequestBody
+    response_body = SubmitResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    # Specify it here if you want requests to all of this clients' endpoints to have auth
+    # auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
+    get_facts = quickapi.ApiEndpoint(GetFactsApi)
+    submit_fact = quickapi.ApiEndpoint(SubmitFactApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
-request_body = RequestBody(required_input="dummy")
 auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
-response = client.execute(request_body=request_body, auth=auth)
+client = ExampleClient(
+  # Specify it here to have auth for all apis on this client instance only
+  # auth=auth
+)
+request_body = RequestBody(required_input="dummy")
+response = client.submit_fact(
+  request_body=request_body,
+  # Or here to have auth just for this api request
+  auth=auth
+)
 ```
 
 </details>
 
 ### A POST request with error handling
 
-An example of a POST request with HTTP header API key that handles HTTP error codes too.
+An example of a POST request that handles HTTP error codes too.
 
 <details>
 <summary>Click to expand</summary>
 
 ```python
-from dataclasses import dataclass
-import httpx_auth
-import quickapi
-
-
-@dataclass
-class RequestBody:
-    required_input: str
-    optional_input: str | None = None
-
-
-@dataclass
-class Fact:
-    fact: str
-    length: int
-
-
-@dataclass
-class AuthResponseBody:
-    authenticated: bool
-    user: str
-
+# ...
 
 @dataclass
 class ResponseError401:
@@ -338,23 +281,27 @@ class ResponseError401:
     message: str
 
 
-class MyApi(quickapi.BaseApi[AuthResponseBody]):
-    url = "https://httpbin.org/bearer"
+class SubmitFactApi(quickapi.BaseApi[SubmitResponseBody]):
+    url = "/facts/new"
     method = quickapi.BaseHttpMethod.POST
-    response_body = AuthResponseBody
+    response_body = ResponseBody
     # Add more types for each HTTP status code you wish to handle
     response_errors = {401: ResponseError401}
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    submit_fact = quickapi.ApiEndpoint(SubmitFactApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
+client = ExampleClient()
 request_body = RequestBody(required_input="dummy")
-auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="incorrect_api_key")
 
 try:
-    response = client.execute(request_body=request_body, auth=auth)
+    response = client.submit_fact(request_body=request_body)
 except quickapi.HTTPError as e:
     match e.value.status_code:
         case 401:
@@ -379,6 +326,7 @@ import quickapi
 import enum
 
 
+
 class State(enum.Enum):
     ON = "on"
     OFF = "off"
@@ -399,19 +347,24 @@ class ResponseBody:
     success: bool = attrs.field(converter=attrs.converters.to_bool)
 
 
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://example.com/"
+class SubmitApi(quickapi.BaseApi[ResponseBody]):
+    url = "/submit"
     method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
     response_body = ResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    submit = quickapi.ApiEndpoint(SubmitApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
+client = ExampleClient()
 request_body = RequestBody(email="invalid_email", state="on") # Will raise an error
-response = client.execute(request_body=request_body)
+response = client.submit(request_body=request_body)
 ```
 
 Check out [attrs](https://github.com/python-attrs/attrs) for full configuration.
@@ -431,6 +384,7 @@ import pydantic
 import quickapi
 
 
+
 class State(enum.Enum):
     ON = "on"
     OFF = "off"
@@ -445,19 +399,24 @@ class ResponseBody(pydantic.BaseModel):
     success: bool
 
 
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://example.com/"
+class SubmitApi(quickapi.BaseApi[ResponseBody]):
+    url = "/submit"
     method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
     response_body = ResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    submit = quickapi.ApiEndpoint(SubmitApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
+client = ExampleClient()
 request_body = RequestBody(email="invalid_email", state="on") # Will raise an error
-response = client.execute(request_body=request_body)
+response = client.submit(request_body=request_body)
 ```
 
 Check out [pydantic](https://github.com/pydantic/pydantic) for full configuration.
@@ -494,19 +453,24 @@ class ResponseBody(msgspec.Struct):
     success: bool
 
 
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://example.com/"
+class SubmitApi(quickapi.BaseApi[ResponseBody]):
+    url = "/submit"
     method = quickapi.BaseHttpMethod.POST
     request_body = RequestBody
     response_body = ResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    submit = quickapi.ApiEndpoint(SubmitApi)
 ```
 
 And to use it:
 
 ```python
-client = MyApi()
+client = ExampleClient()
 request_body = RequestBody(email="invalid_email", state="on") # Will raise an error
-response = client.execute(request_body=request_body)
+response = client.submit(request_body=request_body)
 ```
 
 </details>
@@ -523,63 +487,36 @@ from dataclasses import dataclass
 import quickapi
 
 
+
 @dataclass
 class ResponseBody:
     current_page: int
     data: list[Fact]
 
 
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://catfact.ninja/facts"
+class GetFactsApi(quickapi.BaseApi[ResponseBody]):
+    url = "/facts"
     response_body = ResponseBody
-    http_client = quickapi.RequestsClient()
-```
 
-And to use it:
 
-```python
-client = MyApi()
-response = client.execute()
-```
-
-</details>
-
-### API client with multiple API endpoints
-
-You can easily create a client to manage related endpoints, and even share state among them.
-
-<details>
-<summary>Click to expand</summary>
-
-```python
-... [Assuming GetApi and SubmitApi have been already defined]
-
-class ExampleClient(quickapi.BaseClient):
+class ExampleClient(quickapi.BaseClient)
     base_url = "https://example.com"
-    fetch = quickapi.ClientApi(GetApi)
-    submit = quickapi.ClientApi(SubmitApi)
+    http_client = quickapi.RequestsClient()
+    get_facts = quickapi.ApiEndpoint(GetFactsApi)
 ```
 
 And to use it:
 
 ```python
-client = ExampleClient(
-    http_client=httpx.Client()
-    auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key"),
-)
-
-# Calling the GetApi endpoint
-response = client.fetch()
-
-# Calling the SubmitApi endpoint with some data
-response = client.submit(RequestBody(...))
+client = ExampleClient()
+response = client.get_facts()
 ```
 
 </details>
 
 ## Goal
 
-Eventually, I would like for the API definition to end up looking more like this (though the current approach will still be supported):
+Eventually, I would like for the API client definition to end up looking more like this:
 
 <details>
 <summary>Click to expand</summary>
@@ -588,24 +525,7 @@ Eventually, I would like for the API definition to end up looking more like this
 import quickapi
 
 
-@quickapi.define
-class SubmitApi:
-    url = "/submit"
-    method = quickapi.BaseHttpMethod.POST
-
-    class RequestBody:
-        required_input: str
-        optional_input: str | None = None
-
-    class ResponseBody:
-        current_page: int
-        data: list[Fact]
-```
-
-And if you had multiple related endpoints that could share HTTP session or auth:
-
-```python
-@quickapi.define
+@quickapi.api
 class FetchApi:
     url = "/fetch"
     method = quickapi.BaseHttpMethod.GET
@@ -615,16 +535,30 @@ class FetchApi:
         data: list[Fact]
 
 
-@quickapi.define_client
+@quickapi.api
+class SubmitApi:
+    url = "/submit"
+    method = quickapi.BaseHttpMethod.POST
+
+    class RequestBody:
+        required_input: str
+        optional_input: str | None = None
+
+    class ResponseBody:
+        success: bool
+        message: str
+
+
+@quickapi.client
 class MyClient:
-    base_url = "https://catfact.ninja"
+    base_url = "https://example.com"
     fetch = quickapi.ApiEndpoint(FetchApi)
     submit = quickapi.ApiEndpoint(SubmitApi)
 
 
 client = MyClient(auth=...)
 response = client.fetch()
-response = client.submit(RequestBody(...))
+response = client.submit(request_body=RequestBody(...))
 ```
 
 </details>
