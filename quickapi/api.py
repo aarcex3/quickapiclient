@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Generic, TypeVar, get_args
 
 from quickapi.exceptions import (
-    ClientSetupError,
+    ApiSetupError,
     DictDeserializationError,
     DictSerializationError,
     HTTPError,
@@ -55,13 +55,13 @@ class BaseApi(Generic[ResponseBodyT]):
         response_errors: Optional dictionary of HTTP status codes -> response
             type. The HTTP response body will be serialized to this type depending
             on the HTTP status code returned.
-        auth: Optional authentication to be used. Can be any class supported
-            by the HTTP client.
         http_client: Optional HTTP client to be used if not using the
             default (HTTPx). Or if wanting to customize the default client.
+        auth: Optional authentication to be used. Can be any class supported
+            by the HTTP client.
 
     Raises:
-        ClientSetupError: If the class attributes are not correctly defined.
+        ApiSetupError: If the class attributes are not correctly defined.
 
     Examples:
         A very basic example of a Cat Facts API definition:
@@ -91,16 +91,15 @@ class BaseApi(Generic[ResponseBodyT]):
 
     """
 
-    url: str
+    url: str = "/"
     method: BaseHttpMethod = BaseHttpMethod.GET
     auth: BaseHttpClientAuth = None
     request_params: type[DictSerializableT] | None = None
     request_body: type[DictSerializableT] | None = None
     response_body: type[ResponseBodyT]
     response_errors: ClassVar[dict[int, type]] = {}
-    http_client: BaseHttpClient | None = None
+    http_client: BaseHttpClient = HTTPxClient()
 
-    _http_client: BaseHttpClient = HTTPxClient()  # TODO: Should it be a factory?
     _request_params: "DictSerializableT | None" = None
     _request_body: "DictSerializableT | None" = None
     _response_body_cls: type[ResponseBodyT]
@@ -119,27 +118,21 @@ class BaseApi(Generic[ResponseBodyT]):
 
         cls._response_body_cls = cls.response_body  # pyright: ignore [reportGeneralTypeIssues]
 
-        if cls.http_client is not None:
-            cls._http_client = cls.http_client
-
     @classmethod
     def _validate_subclass(cls) -> None:
-        if getattr(cls, "url", None) is None:
-            raise ClientSetupError(attribute="url")
-
         if getattr(cls, "response_body", None) is None:
-            raise ClientSetupError(attribute="response_body")
+            raise ApiSetupError(attribute="response_body")
 
         if (
             getattr(cls, "method", None) is not None
             and cls.method not in BaseHttpMethod.values()
         ):
-            raise ClientSetupError(attribute="method")
+            raise ApiSetupError(attribute="method")
 
         if getattr(cls, "http_client", None) is not None and not (
             isinstance(cls.http_client, BaseHttpClient)
         ):
-            raise ClientSetupError(attribute="http_client")
+            raise ApiSetupError(attribute="http_client")
 
         if getattr(cls, "__orig_bases__", None) is not None:
             response_body_generic_type = get_args(cls.__orig_bases__[0])[0]  # type: ignore [attr-defined]
@@ -147,7 +140,7 @@ class BaseApi(Generic[ResponseBodyT]):
                 isinstance(response_body_generic_type, TypeVar)
                 and response_body_generic_type.__name__ == "ResponseBodyT"
             ):
-                raise ClientSetupError(attribute="ResponseBodyT")
+                raise ApiSetupError(attribute="ResponseBodyT")
 
     def __init__(
         self,
@@ -155,8 +148,9 @@ class BaseApi(Generic[ResponseBodyT]):
         request_body: "DictSerializableT | None" = None,
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
+        base_url: str | object | None = None,
     ) -> None:
-        self._load_overrides(request_params, request_body, http_client, auth)
+        self._load_overrides(request_params, request_body, http_client, auth, base_url)
 
     def _load_overrides(
         self,
@@ -164,11 +158,17 @@ class BaseApi(Generic[ResponseBodyT]):
         request_body: "DictSerializableT | None" = None,
         http_client: BaseHttpClient | None = None,
         auth: BaseHttpClientAuth = USE_DEFAULT,
+        base_url: str | object | None = None,
     ) -> None:
         self._request_params = request_params or self._request_params
         self._request_body = request_body or self._request_body
-        self._http_client = http_client or self._http_client
+        self.http_client = http_client or self.http_client
         self.auth = auth if auth != USE_DEFAULT else self.auth
+        self.url = (
+            f"{base_url}{self.url}"
+            if base_url and base_url != USE_DEFAULT
+            else self.url
+        )
 
     def execute(
         self,
@@ -208,7 +208,7 @@ class BaseApi(Generic[ResponseBodyT]):
         request_params = self._parse_request_params(self._request_params)
         request_body = self._parse_request_body(self._request_body)
 
-        client_response = self._http_client.send_request(
+        client_response = self.http_client.send_request(
             method=self.method,
             url=self.url,
             auth=self.auth,

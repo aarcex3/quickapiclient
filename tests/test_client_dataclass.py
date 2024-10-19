@@ -1,5 +1,6 @@
 import dataclasses
 
+import httpx_auth
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -29,79 +30,76 @@ class ResponseBody:
     data: list[Fact] = dataclasses.field(default_factory=list)
 
 
-@dataclasses.dataclass
-class ResponseError401:
-    status: str
-    message: str
+class GetDataClassApi(quickapi.BaseApi[ResponseBody]):
+    url = "/facts"
+    response_body = ResponseBody
 
 
-# TODO: Build real mock API to easily test various scenarios?
 class PostDataclassApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://example.com/facts"
+    url = "/facts"
     method = quickapi.BaseHttpMethod.POST
     request_params = RequestParams
     request_body = RequestBody
     response_body = ResponseBody
-    response_errors = {401: ResponseError401}  # noqa: RUF012
 
 
-class TestGetDataclassApi:
-    def test_api_call_with_default_request_params(self, httpx_mock: HTTPXMock):
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    fetch = quickapi.ApiEndpoint(GetDataClassApi)
+    submit = quickapi.ApiEndpoint(PostDataclassApi)
+
+
+class TestExampleClient:
+    def test_api_client_fetch(self, httpx_mock: HTTPXMock):
         mock_json = {"current_page": 1, "data": [{"fact": "Some fact", "length": 9}]}
         httpx_mock.add_response(
-            url=f"{PostDataclassApi.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            url=f"{ExampleClient.base_url}{ExampleClient.fetch.url}",
+            match_headers={"X-Api-Key": "my_api_key"},
             json=mock_json,
         )
 
-        client = PostDataclassApi()
-        response = client.execute()
+        client = ExampleClient(
+            auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
+        )
+        response = client.fetch()
         assert response.body.current_page == 1
         assert response.body.data[0] == Fact(fact="Some fact", length=9)
 
-    def test_api_call_with_custom_request_params(self, httpx_mock: HTTPXMock):
-        mock_json = {"current_page": 1, "data": [{"fact": "fact", "length": 4}]}
-        request_params = RequestParams(max_length=5, limit=10)
+    def test_api_client_submit(self, httpx_mock: HTTPXMock):
+        mock_json = {"current_page": 1, "data": [{"fact": "Some fact", "length": 9}]}
+        client = ExampleClient(
+            auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
+        )
+
         httpx_mock.add_response(
-            url=f"{PostDataclassApi.url}?max_length={request_params.max_length}&limit={request_params.limit}",
+            url=f"{ExampleClient.base_url}{ExampleClient.submit.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            match_headers={"X-Api-Key": "my_api_key"},
             json=mock_json,
         )
 
-        client = PostDataclassApi()
-        response = client.execute(request_params=request_params)
+        response = client.submit()
         assert response.body.current_page == 1
-        assert response.body.data[0] == Fact(fact="fact", length=4)
+        assert response.body.data[0] == Fact(fact="Some fact", length=9)
 
-    def test_api_call_with_custom_request_body(self, httpx_mock: HTTPXMock):
-        mock_json = {"current_page": 1, "data": [{"fact": "fact", "length": 4}]}
-        request_params = RequestParams(max_length=5, limit=10)
-        request_body = RequestBody(some_data="some data")
-        httpx_mock.add_response(
-            url=f"{PostDataclassApi.url}?max_length={request_params.max_length}&limit={request_params.limit}",
-            match_json={"some_data": request_body.some_data},
-            json=mock_json,
-        )
 
-        client = PostDataclassApi()
-        response = client.execute(
-            request_params=request_params, request_body=request_body
-        )
-        assert response.body.current_page == 1
-        assert response.body.data[0] == Fact(fact="fact", length=4)
+class TestClientSetupError:
+    def test_if_invalid_api_endpoint_cls(self, httpx_mock: HTTPXMock):
+        with pytest.raises(quickapi.ClientSetupError):
 
-    def test_api_call_with_custom_response_errors(self, httpx_mock: HTTPXMock):
-        mock_json = {"status": "Failure", "message": "Unauthorized"}
-        httpx_mock.add_response(
-            url=f"{PostDataclassApi.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
-            json=mock_json,
-            status_code=401,
-        )
+            class _(quickapi.BaseClient):
+                invalid_endpoint = quickapi.ApiEndpoint(object)  # type: ignore [reportArgumentType]
 
-        client = PostDataclassApi()
-        with pytest.raises(quickapi.HTTPError) as e:
-            client.execute()
+    def test_if_api_endpoint_not_part_of_base_client(self, httpx_mock: HTTPXMock):
+        lone_api_endpoint = quickapi.ApiEndpoint(GetDataClassApi)
+        with pytest.raises(AttributeError):
+            lone_api_endpoint()
 
-        assert e.value.status_code == 401
-        assert e.value.handled is True
-        assert e.value.body == ResponseError401(
-            status="Failure", message="Unauthorized"
-        )
+    def test_if_api_endpoint_descriptor_set(self, httpx_mock: HTTPXMock):
+        client = ExampleClient()
+        with pytest.raises(AttributeError):
+            client.fetch = "invalid"
+
+    def test_if_api_endpoint_descriptor_del(self, httpx_mock: HTTPXMock):
+        client = ExampleClient()
+        with pytest.raises(AttributeError):
+            del client.fetch

@@ -513,11 +513,9 @@ response = client.execute()
 
 </details>
 
-### Multiple API endpoints sharing state
+### API client with multiple API endpoints
 
-You can easily create a client to manage related endpoints, and even share things like
-auth. This is done through pure Python at this stage, though we aim to make this a lot
-easier and streamlined in the future.
+You can easily create a client to manage related endpoints, and even share state among them.
 
 <details>
 <summary>Click to expand</summary>
@@ -525,21 +523,25 @@ easier and streamlined in the future.
 ```python
 ... [Assuming GetApi and SubmitApi have been already defined]
 
-class ExampleClient:
-    fetch = GetApi
-    submit = SubmitApi
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    fetch = quickapi.ClientApi(GetApi)
+    submit = quickapi.ClientApi(SubmitApi)
 ```
 
 And to use it:
 
 ```python
-client = ExampleClient()
-auth = httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key")
-http_client = httpx.Client()
+client = ExampleClient(
+    http_client=httpx.Client()
+    auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="secret_api_key"),
+)
+
 # Calling the GetApi endpoint
-response = client.fetch(auth=auth, http_client=http_client).execute()
-# Calling the SubmitApi endpoint
-response = client.submit(auth=auth, http_client=http_client).execute()
+response = client.fetch()
+
+# Calling the SubmitApi endpoint with some data
+response = client.submit(RequestBody(...))
 ```
 
 </details>
@@ -581,11 +583,13 @@ class FetchApi:
         current_page: int
         data: list[Fact]
 
+
 @quickapi.define_client
 class MyClient:
     base_url = "https://catfact.ninja"
-    fetch = FetchApi
-    submit = SubmitApi
+    fetch = quickapi.ApiEndpoint(FetchApi)
+    submit = quickapi.ApiEndpoint(SubmitApi)
+
 
 client = MyClient(auth=...)
 response = client.fetch()

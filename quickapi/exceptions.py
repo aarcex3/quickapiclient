@@ -10,10 +10,22 @@ class QuickApiException(Exception):
 
 
 class ClientSetupError(QuickApiException):
-    """An error setting up the BaseClient subclass."""
+    """An error setting up the `BaseClient` subclass."""
 
     def __init__(self, attribute: str):
-        message = f"Subclass setup error. Missing or invalid required attribute `{attribute}`."
+        message = (
+            f"Client setup error. Missing or invalid required attribute `{attribute}`."
+        )
+        super().__init__(message)
+
+
+class ApiSetupError(QuickApiException):
+    """An error setting up the `BaseApi` subclass."""
+
+    def __init__(self, attribute: str):
+        message = (
+            f"Api setup error. Missing or invalid required attribute `{attribute}`."
+        )
         super().__init__(message)
 
 
