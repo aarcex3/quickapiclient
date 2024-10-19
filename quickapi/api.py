@@ -16,10 +16,7 @@ from quickapi.http_clients import (
     HTTPxClient,
 )
 from quickapi.http_clients.types import BaseHttpMethod
-from quickapi.serializers import (
-    DictSerializable,
-    DictSerializableT,
-)
+from quickapi.serializers import DictSerializable, DictSerializableT
 from quickapi.serializers.types import FromDictSerializableT
 
 USE_DEFAULT = object()

@@ -5,9 +5,7 @@ from typing_extensions import Self
 from quickapi.api import USE_DEFAULT, BaseApi, BaseResponse, ResponseBodyT
 from quickapi.exceptions import ClientSetupError
 from quickapi.http_clients import BaseHttpClient, BaseHttpClientAuth, HTTPxClient
-from quickapi.serializers import (
-    DictSerializableT,
-)
+from quickapi.serializers import DictSerializableT
 
 
 class BaseClient:
