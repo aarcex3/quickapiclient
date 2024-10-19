@@ -5,6 +5,9 @@ from typing_extensions import Self
 from quickapi.api import USE_DEFAULT, BaseApi, BaseResponse, ResponseBodyT
 from quickapi.exceptions import ClientSetupError
 from quickapi.http_clients import BaseHttpClient, BaseHttpClientAuth, HTTPxClient
+from quickapi.serializers import (
+    DictSerializableT,
+)
 
 
 class BaseClient:
@@ -115,13 +118,25 @@ class ApiEndpoint(Generic[ResponseBodyT]):
 
         return self
 
-    def __call__(self) -> BaseResponse[ResponseBodyT]:
+    def __call__(
+        self,
+        request_params: "DictSerializableT | None" = None,
+        request_body: "DictSerializableT | None" = None,
+        http_client: BaseHttpClient | None = None,
+        auth: BaseHttpClientAuth = USE_DEFAULT,
+    ) -> BaseResponse[ResponseBodyT]:
         """
         Execute the API call.
         """
         if self._api is None:
             raise AttributeError("API endpoint not part of a `BaseClient` instance.")  # noqa: TRY003
-        return self._api.execute()
+
+        return self._api.execute(
+            request_params=request_params,
+            request_body=request_body,
+            http_client=http_client,
+            auth=auth,
+        )
 
     def __set__(self, instance: BaseClient, value: Any) -> NoReturn:
         raise AttributeError(  # noqa: TRY003

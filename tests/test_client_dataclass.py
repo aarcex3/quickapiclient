@@ -14,6 +14,12 @@ class Fact:
 
 
 @dataclasses.dataclass
+class RequestParams:
+    max_length: int = 100
+    limit: int = 10
+
+
+@dataclasses.dataclass
 class ResponseBody:
     current_page: int
     data: list[Fact]
@@ -21,17 +27,12 @@ class ResponseBody:
 
 class GetDataClassApi(quickapi.BaseApi[ResponseBody]):
     url = "/facts"
+    request_params = RequestParams
     response_body = ResponseBody
 
 
 @dataclasses.dataclass
-class RequestParams:
-    max_length: int = 100
-    limit: int = 10
-
-
-@dataclasses.dataclass
-class RequestBody:
+class PostRequestBody:
     some_data: str | None = None
 
 
@@ -42,10 +43,9 @@ class PostResponseBody:
 
 
 class PostDataclassApi(quickapi.BaseApi[PostResponseBody]):
-    url = "/facts"
+    url = "/facts/new"
     method = quickapi.BaseHttpMethod.POST
-    request_params = RequestParams
-    request_body = RequestBody
+    request_body = PostRequestBody
     response_body = PostResponseBody
 
 
@@ -59,7 +59,7 @@ class TestExampleClient:
     def test_api_client_fetch(self, httpx_mock: HTTPXMock):
         mock_json = {"current_page": 1, "data": [{"fact": "Some fact", "length": 9}]}
         httpx_mock.add_response(
-            url=f"{ExampleClient.base_url}{ExampleClient.fetch.url}",
+            url=f"{ExampleClient.base_url}{ExampleClient.fetch.url}?max_length=100&limit=10",
             match_headers={"X-Api-Key": "my_api_key"},
             json=mock_json,
         )
@@ -67,23 +67,26 @@ class TestExampleClient:
         client = ExampleClient(
             auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
         )
-        response = client.fetch()
+        request_params = RequestParams(max_length=100, limit=10)
+        response = client.fetch(request_params=request_params)
+
         assert response.body.current_page == 1
         assert response.body.data[0] == Fact(fact="Some fact", length=9)
 
     def test_api_client_submit(self, httpx_mock: HTTPXMock):
         mock_json = {"success": True, "message": "Success"}
-        client = ExampleClient(
-            auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
-        )
-
         httpx_mock.add_response(
-            url=f"{ExampleClient.base_url}{ExampleClient.submit.url}?max_length={RequestParams().max_length}&limit={RequestParams().limit}",
+            url=f"{ExampleClient.base_url}{ExampleClient.submit.url}",
             match_headers={"X-Api-Key": "my_api_key"},
             json=mock_json,
         )
 
-        response = client.submit()
+        client = ExampleClient(
+            auth=httpx_auth.HeaderApiKey(header_name="X-Api-Key", api_key="my_api_key")
+        )
+        request_body = PostRequestBody(some_data="some data")
+        response = client.submit(request_body=request_body)
+
         assert response.body.success is True
         assert response.body.message == "Success"
 

@@ -9,7 +9,7 @@ A library for creating fully typed declarative API clients quickly and easily.
 - **Github repository**: <https://github.com/martinn/quickapiclient/>
 - **Documentation** <https://martinn.github.io/quickapiclient/>
 
-## A quick example
+## A basic example
 
 An API definition for a simple service could look like this:
 
@@ -27,26 +27,57 @@ class Fact:
 
 # What the API response should look like
 @dataclass
-class ResponseBody:
+class GetFactsResponseBody:
     current_page: int
     data: list[Fact]
 
 
-# Now we can define our API
-class MyApi(quickapi.BaseApi[ResponseBody]):
-    url = "https://catfact.ninja/facts"
-    response_body = ResponseBody
+# We define our first API endpoint
+class GetFacts(quickapi.BaseApi[GetFactsResponseBody]):
+    url = "/facts"
+    response_body = GetFactsResponseBody
+
+
+@dataclasses.dataclass
+class SubmitFactRequestBody:
+    fact: str
+
+
+@dataclasses.dataclass
+class SubmitFactResponseBody:
+    success: bool
+    message: str
+
+
+class SubmitFact(quickapi.BaseApi[PostResponseBody]):
+    url = "/facts/new"
+    method = quickapi.BaseHttpMethod.POST
+    request_body = RequestBody
+    response_body = PostResponseBody
+
+
+class ExampleClient(quickapi.BaseClient):
+    base_url = "https://example.com"
+    get_facts = quickapi.ApiEndpoint(GetFacts)
+    submit_fact = quickapi.ApiEndpoint(SubmitFact)
 ```
 
 And you would use it like this:
 
 ```python
-api_client = MyApi()
-response = api_client.execute()
+client = ExampleClient()
 
-# That's it! Now `response` is fully typed and conforms to our `ResponseBody` definition
-assert isinstance(response.body, ResponseBody)
+response = client.get_facts()
+
+# `response` is fully typed and conforms to our `GetFactsResponseBody` definition
+assert isinstance(response.body, GetFactsResponseBody)
 assert isinstance(response.body.data[0], Fact)
+
+response = client.submit_fact(SubmitFactRequestBody(fact="Some new fact."))
+
+# `response` is fully typed and conforms to our `SubmitFactResponseBody` definition
+assert isinstance(response.body, SubmitFactResponseBody)
+assert isinstance(response.body.success, bool)
 ```
 
 There's also support for `attrs` or `pydantic` for more complex modeling, validation or serialization support.
